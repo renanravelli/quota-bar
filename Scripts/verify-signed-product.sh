@@ -123,7 +123,12 @@ repository_art="$(
     | grep -iE "\.($art_extensions)$" || true
 )"
 
-brand_named_art="$(printf '%s\n' "$repository_art" | grep -iE "$brand_pattern" || true)"
+# O padrão vale sobre o nome do arquivo, não sobre o caminho: o repositório pode
+# viver sob um diretório cujo nome contenha a marca sem que a arte a cite.
+brand_named_art="$(printf '%s\n' "$repository_art" | while IFS= read -r path; do
+  [ -n "$path" ] || continue
+  basename "$path" | grep -qiE "$brand_pattern" && printf '%s\n' "$path"
+done || true)"
 if [ -n "$brand_named_art" ]; then
   echo "error: arquivo de arte com nome de marca de terceiro no repositório (ADR-007):"
   printf 'error:   %s\n' $brand_named_art
