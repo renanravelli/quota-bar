@@ -46,6 +46,10 @@ targets:
       configs:
         Debug:
           CODE_SIGN_IDENTITY: "$(QUOTABAR_CODE_SIGN_IDENTITY:default=-)"
+          # A biblioteca separada de depuração é assinada à parte do executável, e
+          # o carregador recusa o par por divergência de equipe quando a identidade
+          # deixa de ser ad-hoc.
+          ENABLE_DEBUG_DYLIB: NO
           EXCLUDED_SOURCE_FILE_NAMES: ReleaseProviderFactory.swift
         Release:
           CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
