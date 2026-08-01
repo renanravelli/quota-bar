@@ -62,6 +62,7 @@ public final class StableQuotaStateProvider: QuotaStateProviding {
             cycle: CadenceCycle(
                 id: 1,
                 cadence: ScheduledCadence(interval: .seconds(180), nature: .base)!,
+                expectedReadingAt: readAt.addingTimeInterval(180),
                 deferralDeadline: .distantFuture
             ),
             maxIdleCadenceSinceReading: .seconds(180),

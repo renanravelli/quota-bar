@@ -164,14 +164,14 @@ struct PanelCardTests {
         #expect(content.fiveHour.litSegments == 0)
         #expect(content.fiveHour.tint == nil)
         #expect(content.fiveHour.countdown == nil)
-        #expect(content.cadenceBar == nil)
+        #expect(content.cadence == nil)
     }
 
     @Test("QB-APP-002 AC-18: a barra de cadência representa o progresso até a próxima leitura")
     func cadenceBarShowsProgress() {
-        let atStart = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 0).cadenceBar
-        let midway = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 90).cadenceBar
-        let past = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 600).cadenceBar
+        let atStart = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 0).cadence
+        let midway = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 90).cadence
+        let past = Card.content(fiveHour: "50", cadenceSeconds: 180, afterSeconds: 600).cadence
 
         #expect(atStart?.progress == 0)
         #expect(abs((midway?.progress ?? 0) - 0.5) < 0.001)
@@ -182,9 +182,9 @@ struct PanelCardTests {
     func cadenceBarAgreesWithTheCadenceLine() {
         let content = Card.content(fiveHour: "50", nature: .idle, cadenceSeconds: 900)
 
-        #expect(content.cadenceBar?.nature == .idle)
-        #expect(content.cadence?.contains("reduzido por ociosidade") == true)
-        #expect(content.cadence?.contains("15 minutos") == true)
+        #expect(content.cadence?.nature == .idle)
+        #expect(content.cadenceLine?.contains("reduzido por ociosidade") == true)
+        #expect(content.cadenceLine?.contains("15 minutos") == true)
     }
 
     @Test("QB-APP-002 AC-13: o cartão não acrescenta informação além da exigida")
@@ -200,7 +200,7 @@ struct PanelCardTests {
         #expect(content.fiveHour.reset != nil)
         #expect(content.sevenDay.reset == nil)
         #expect(content.selection != nil)
-        #expect(content.cadence != nil)
+        #expect(content.cadenceLine != nil)
         #expect(content.source != nil)
         #expect(!content.quitTitle.isEmpty)
     }

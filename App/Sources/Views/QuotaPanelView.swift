@@ -41,11 +41,11 @@ struct QuotaPanelView: View {
                 bodyText(selection)
             }
             bodyText(content.situation)
-            if let cadence = content.cadence {
-                bodyText(cadence)
+            if let cadenceLine = content.cadenceLine {
+                bodyText(cadenceLine)
             }
-            if let bar = content.cadenceBar {
-                CadenceBarView(bar: bar)
+            if let cadence = content.cadence {
+                CadenceBarView(display: cadence)
             }
             if let source = content.source {
                 bodyText(source)

@@ -11,38 +11,12 @@ struct WindowRow: Equatable {
     let absences: [String]
 }
 
-enum CadenceMark: Equatable {
-    case none
-    case idleDashes
-    case failureRing
-    case deferralDashes
-
-    static func mark(for nature: Cadence.Nature) -> CadenceMark {
-        switch nature {
-        case .base: .none
-        case .idle: .idleDashes
-        case .widenedByFailure: .failureRing
-        case .deferredBySystem: .deferralDashes
-        }
-    }
-}
-
-struct CadenceBar: Equatable {
-    let progress: Double
-    let nature: Cadence.Nature
-
-    var mark: CadenceMark {
-        CadenceMark.mark(for: nature)
-    }
-}
-
 struct PanelContent: Equatable {
     let fiveHour: WindowRow
     let sevenDay: WindowRow
     let selection: String?
     let situation: String
-    let cadence: String?
-    let cadenceBar: CadenceBar?
+    let cadence: CadenceDisplay?
     let source: String?
     let contingencyLosses: [String]
     let credentialNotice: String?
@@ -52,6 +26,10 @@ struct PanelContent: Equatable {
     let mascot: MascotExpression
     let configureCredentialTitle: String?
     let quitTitle: String
+
+    var cadenceLine: String? {
+        cadence.map { PanelText.cadenceLine($0.cadence) }
+    }
 
     var actionTitles: [String] {
         [configureCredentialTitle, quitTitle].compactMap { $0 }
@@ -162,8 +140,11 @@ enum PanelContentBuilder {
             sevenDay: row(name: PanelText.sevenDayName, reading: snapshot?.sevenDay, now: now, formatter: formatter),
             selection: selectionLine(for: indicator),
             situation: situationLine(for: indicator, state: state, now: now),
-            cadence: cadence.map(PanelText.cadenceLine),
-            cadenceBar: cadenceBar(cadence, readAt: snapshot?.readAt, now: now),
+            cadence: CadenceDisplayPolicy.display(
+                for: cadence,
+                expectedReadingAt: state?.cycle?.expectedReadingAt,
+                now: now
+            ),
             source: state?.source.map(PanelText.sourceName),
             contingencyLosses: state?.source == .contingencyStatusLine ? PanelText.contingencyLosses : [],
             credentialNotice: credentialNotice(for: state),
@@ -225,16 +206,6 @@ enum PanelContentBuilder {
         guard let resetsAt else { return nil }
         let remaining = Duration.seconds(max(0, resetsAt.timeIntervalSince(now)))
         return CountdownText.text(remaining: remaining, format: CountdownPolicy.format(remaining: remaining))
-    }
-
-    private static func cadenceBar(_ cadence: Cadence?, readAt: Date?, now: Date) -> CadenceBar? {
-        guard let cadence, let readAt else { return nil }
-
-        let interval = Double(cadence.interval.components.seconds)
-        guard interval > 0 else { return nil }
-
-        let elapsed = max(0, now.timeIntervalSince(readAt))
-        return CadenceBar(progress: min(elapsed / interval, 1), nature: cadence.nature)
     }
 
     private static func selectionLine(for indicator: IndicatorState) -> String? {

@@ -25,7 +25,12 @@ public struct ProbePlanner: Sendable {
     }
 
     public var cycle: CadenceCycle {
-        CadenceCycle(id: cycleID, cadence: cadence, deferralDeadline: deferralDeadline)
+        CadenceCycle(
+            id: cycleID,
+            cadence: cadence,
+            expectedReadingAt: appointment.instant,
+            deferralDeadline: deferralDeadline
+        )
     }
 
     public init(startingAt now: Date, policy: DeferralPolicy = .standard) {

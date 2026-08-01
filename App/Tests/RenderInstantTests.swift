@@ -61,7 +61,7 @@ enum Journey {
 
     static func allStrings(of content: PanelContent) -> [String] {
         var strings = [content.situation, content.quitTitle]
-        strings += [content.selection, content.cadence, content.source].compactMap { $0 }
+        strings += [content.selection, content.cadenceLine, content.source].compactMap { $0 }
         strings += [content.credentialNotice, content.sourceChangeNotice, content.fixtureNotice].compactMap { $0 }
         strings += content.contingencyLosses + content.pendencies + content.actionTitles
         for row in [content.fiveHour, content.sevenDay] {
@@ -139,10 +139,11 @@ struct RenderInstantTests {
         #expect(invariants.allSatisfy { $0 == invariants[0] }, "algo fora dos cinco conteúdos mudou em regime")
 
         let countdowns = frames.map(\.fiveHour.countdown)
-        let progress = try frames.map { try #require($0.cadenceBar).progress }
+        let progress = try frames.map { try #require($0.cadence).progress }
         let markings = frames.map { Journey.isMarkedStale($0.situation) }
         let ages = frames.map { Journey.displayedMinutes(in: $0.situation) }
-        let declarations = frames.map { $0.cadence?.contains("adiada pelo sistema") == true }
+        let declarations = frames.map { $0.cadenceLine?.contains("adiada pelo sistema") == true }
+        let reinforcements = try frames.map { try #require($0.cadence).reinforcement }
 
         #expect(Set(countdowns).count > 1, "a contagem regressiva não andou")
         #expect(Set(progress).count > 1, "o preenchimento não andou")
@@ -152,9 +153,12 @@ struct RenderInstantTests {
         #expect(markings.first == false && markings.last == true)
         #expect(declarations.first == false && declarations.last == true)
 
-        let barNatures = try frames.map { try #require($0.cadenceBar).nature }
         #expect(
-            zip(barNatures, declarations).allSatisfy { ($0 == .deferredBySystem) == $1 },
+            changeIndices(of: reinforcements) == changeIndices(of: declarations),
+            "a variante da barra mudou fora da atualização em que o texto passou a declarar o adiamento"
+        )
+        #expect(
+            zip(reinforcements, declarations).allSatisfy { ($0 == .deferral) == $1 },
             "a barra apresentou a variante de uma natureza junto do texto de outra"
         )
     }
@@ -162,12 +166,19 @@ struct RenderInstantTests {
     private func flips(of values: [Bool]) -> Int {
         zip(values, values.dropFirst()).count { $0 != $1 }
     }
+
+    private func changeIndices<Value: Equatable>(of values: [Value]) -> [Int] {
+        zip(values, values.dropFirst()).enumerated().compactMap { index, pair in
+            pair.0 == pair.1 ? nil : index + 1
+        }
+    }
 }
 
 private struct RegimeInvariant: Equatable {
     let rows: [[String]]
     let tints: [QuotaBarCore.RGBColor?]
     let litSegments: [Int]
+    let cadenceInterval: Duration?
     let selection: String?
     let source: String?
     let notices: [String?]
@@ -181,6 +192,7 @@ private struct RegimeInvariant: Equatable {
         }
         tints = [content.fiveHour.tint, content.sevenDay.tint]
         litSegments = [content.fiveHour.litSegments, content.sevenDay.litSegments]
+        cadenceInterval = content.cadence?.cadence.interval
         selection = content.selection
         source = content.source
         notices = [content.credentialNotice, content.sourceChangeNotice, content.fixtureNotice]

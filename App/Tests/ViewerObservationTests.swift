@@ -56,7 +56,7 @@ struct ViewerObservationTests {
         provider.emit(Fixture.reading(under: .idle))
         await Wait.until { presenter.state.cycle?.cadence.nature == .idle }
         #expect(presenter.indicatorText == "5h 30%")
-        #expect(presenter.panelContent(at: Fixture.openedAt).cadence == "Atualizando a cada 15 minutos — reduzido por ociosidade.")
+        #expect(presenter.panelContent(at: Fixture.openedAt).cadenceLine == "Atualizando a cada 15 minutos — reduzido por ociosidade.")
 
         presenter.panelDidOpen()
         await Wait.until { await provider.viewerSignals == [true] }
@@ -64,7 +64,7 @@ struct ViewerObservationTests {
         await Wait.until { presenter.state.cycle?.cadence.nature == .base }
 
         #expect(await provider.viewerSignals == [true])
-        #expect(presenter.panelContent(at: Fixture.openedAt).cadence == "Atualizando a cada 3 minutos — ritmo base.")
+        #expect(presenter.panelContent(at: Fixture.openedAt).cadenceLine == "Atualizando a cada 3 minutos — ritmo base.")
         #expect(presenter.indicatorText == "5h 30%")
         if case .ready = presenter.indicator {} else {
             Issue.record("o indicador saiu de ready ao abrir o painel: \(presenter.indicator)")

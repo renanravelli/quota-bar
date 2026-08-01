@@ -85,7 +85,7 @@ private struct TextOnly: Hashable {
     let litSegments: [Int]
 
     init(_ content: PanelContent) {
-        cadence = content.cadence
+        cadence = content.cadenceLine
         rest = [
             content.situation, content.selection, content.source,
             content.credentialNotice, content.sourceChangeNotice, content.fixtureNotice,
@@ -113,7 +113,7 @@ struct CadenceNatureSurfaceTests {
         let observed = CadenceSurface.readAt.addingTimeInterval(90)
         let contents = CadenceSurface.fourNatures.map { CadenceSurface.content(of: $0.state, at: observed) }
 
-        let lines = try contents.map { try #require($0.cadence) }
+        let lines = try contents.map { try #require($0.cadenceLine) }
         #expect(Set(lines).count == 4, "duas naturezas produziram a mesma linha de cadência")
         #expect(Set(contents.map(TextOnly.init)).count == 4)
         #expect(contents.map(\.fiveHour.tint).allSatisfy { $0 == contents[0].fiveHour.tint })
@@ -138,84 +138,102 @@ struct CadenceNatureSurfaceTests {
 
         for nature in CadenceSurface.fourNatures {
             let bar = try #require(
-                CadenceSurface.content(of: nature.state, at: CadenceSurface.readAt.addingTimeInterval(elapsed)).cadenceBar
+                CadenceSurface.content(of: nature.state, at: CadenceSurface.readAt.addingTimeInterval(elapsed)).cadence
             )
             #expect(abs(bar.progress - elapsed / 180) < 0.001, "a barra não representa o progresso em \(nature.name)")
         }
     }
 
-    @Test("QB-APP-002 AC-18: as marcas continuam distintas como reforço permitido")
-    func theMarksRemainDistinctAsPermittedReinforcement() {
-        let observed: [Cadence.Nature] = [.base, .idle, .widenedByFailure, .deferredBySystem]
-
-        #expect(Set(observed.map(CadenceMark.mark(for:))).count == 4)
-        #expect(CadenceMark.mark(for: .base) == CadenceMark.none)
-    }
-
-    @Test("QB-APP-002 AC-34: com o estado constante, só o preenchimento muda na barra")
+    @Test("QB-APP-002 AC-34: com o prazo do ciclo fora do trecho observado, só o preenchimento muda na barra")
     func onlyTheFillMovesWhileTheStateIsConstant() throws {
+        let observedUntil = CadenceSurface.readAt.addingTimeInterval(10)
+        let deadline = CadenceSurface.readAt.addingTimeInterval(270)
+        #expect(deadline > observedUntil, "o Dado exige o prazo do ciclo fora dos 10 segundos observados")
+
         let bars = try CadenceSurface
-            .frames(of: CadenceSurface.state(nature: .idle), from: 0, to: 10, step: 0.5)
-            .map { try #require($0.cadenceBar) }
+            .frames(of: CadenceSurface.state(nature: .idle, deferralDeadline: deadline), from: 0, to: 10, step: 0.5)
+            .map { try #require($0.cadence) }
 
         #expect(bars.allSatisfy { $0.nature == .idle })
-        #expect(Set(bars.map(\.mark)).count == 1, "a marca mudou sem que a natureza mudasse")
+        #expect(Set(bars.map(\.reinforcement)).count == 1, "o reforço mudou sem que a natureza mudasse")
         #expect(Set(bars.map(\.progress)).count == bars.count, "o preenchimento não se moveu")
     }
 
-    @Test("QB-APP-002 AC-34: barra e texto mudam juntos quando a natureza muda, com e sem estado novo")
-    func theBarAndTheTextChangeTogether() throws {
-        let crossingWithoutNewState = CadenceSurface.frames(
-            of: CadenceSurface.state(deferralDeadline: CadenceSurface.readAt.addingTimeInterval(120)),
-            from: 60,
-            to: 180,
-            step: 5
-        )
-        let stateChange = CadenceSurface.frames(over: [
+    @Test("QB-APP-002 AC-34: com estado novo, barra e texto mudam de natureza na mesma atualização")
+    func theBarAndTheTextChangeTogetherOnNewState() throws {
+        let frames = CadenceSurface.frames(over: [
             (CadenceSurface.state(nature: .base), [60, 90]),
             (CadenceSurface.state(nature: .widenedByFailure, cycleID: 2), [120, 150])
         ])
 
-        for frames in [crossingWithoutNewState, stateChange] {
-            let natures = try frames.map { try #require($0.cadenceBar).nature }
-            let lines = try frames.map { try #require($0.cadence) }
-
-            for (nature, line) in zip(natures, lines) {
-                #expect(
-                    line == PanelText.cadenceLine(Cadence(interval: CadenceSurface.interval, nature: nature)!),
-                    "a barra apresentou a variante de \(nature) junto do texto \(line)"
-                )
-            }
-            #expect(Set(natures).count == 2, "o percurso não atravessou a mudança de natureza")
-            #expect(
-                changeIndices(of: natures) == changeIndices(of: lines),
-                "a barra e o texto mudaram em quadros diferentes"
-            )
-        }
+        try expectTheBarNeverContradictsTheText(frames)
     }
 
     @Test("QB-APP-002 AC-35: passado o instante previsto, o preenchimento chega a cheio e para")
     func theFillSaturatesAndStops() throws {
-        let frames = CadenceSurface.frames(of: CadenceSurface.state(), from: 0, to: 360, step: 5)
-        let bars = try frames.map { try #require($0.cadenceBar) }
-        let progress = bars.map(\.progress)
+        let deadline = CadenceSurface.readAt.addingTimeInterval(270)
+        let frames = CadenceSurface.frames(
+            of: CadenceSurface.state(deferralDeadline: deadline),
+            from: 0,
+            to: 360,
+            step: 5
+        )
+        #expect(
+            deadline > CadenceSurface.readAt && deadline < CadenceSurface.readAt.addingTimeInterval(360),
+            "o Dado exige o prazo do ciclo dentro do percurso observado"
+        )
+
+        let progress = try frames.map { try #require($0.cadence).progress }
 
         #expect(progress.first == 0)
         #expect(progress == progress.sorted(), "o preenchimento recuou ou reiniciou")
         #expect(progress.allSatisfy { $0 <= 1 }, "o preenchimento transbordou")
         #expect(progress.last == 1)
         #expect(progress.drop { $0 < 1 }.allSatisfy { $0 == 1 }, "o preenchimento voltou a andar depois de saturar")
-        #expect(Set(bars.map(\.nature)).count == 1, "a natureza mudou no percurso e a barra não é só preenchimento")
+    }
+
+    @Test("QB-APP-002 AC-35: pela passagem do tempo, a variante só muda na atualização em que o texto muda")
+    func theVariantChangesOnlyWithTheTextAsTimePasses() throws {
+        let frames = CadenceSurface.frames(
+            of: CadenceSurface.state(deferralDeadline: CadenceSurface.readAt.addingTimeInterval(270)),
+            from: 0,
+            to: 360,
+            step: 5
+        )
+
+        try expectTheBarNeverContradictsTheText(frames)
+        #expect(
+            try frames.map { try #require($0.cadence).nature }.last == .deferredBySystem,
+            "o percurso não terminou com o adiamento declarado"
+        )
     }
 
     @Test("QB-APP-002 REQ-11: cheio e parado não identifica adiamento — a espera por falha satura igual")
     func saturationDoesNotIdentifyDeferral() throws {
         let frames = CadenceSurface.frames(of: CadenceSurface.state(nature: .widenedByFailure), from: 180, to: 360, step: 5)
-        let bars = try frames.map { try #require($0.cadenceBar) }
+        let bars = try frames.map { try #require($0.cadence) }
 
         #expect(bars.allSatisfy { $0.progress == 1 }, "a cadência ampliada por falha não saturou")
         #expect(bars.allSatisfy { $0.nature == .widenedByFailure })
-        #expect(frames.allSatisfy { $0.cadence?.contains("ampliado por falha") == true })
+        #expect(frames.allSatisfy { $0.cadenceLine?.contains("ampliado por falha") == true })
+    }
+
+    private func expectTheBarNeverContradictsTheText(_ frames: [PanelContent]) throws {
+        let bars = try frames.map { try #require($0.cadence) }
+        let lines = try frames.map { try #require($0.cadenceLine) }
+
+        for (bar, line) in zip(bars, lines) {
+            #expect(
+                line == PanelText.cadenceLine(Cadence(interval: CadenceSurface.interval, nature: bar.nature)!),
+                "a barra apresentou a variante de \(bar.nature) junto do texto \(line)"
+            )
+        }
+        #expect(Set(bars.map(\.nature)).count == 2, "o percurso não atravessou a mudança de natureza")
+        #expect(Set(bars.map(\.reinforcement)).count == 2, "a variante não acompanhou a mudança de natureza")
+        #expect(
+            changeIndices(of: bars.map(\.reinforcement)) == changeIndices(of: lines),
+            "a variante da barra mudou fora da atualização em que o texto mudou"
+        )
     }
 
     private func changeIndices<Value: Equatable>(of values: [Value]) -> [Int] {

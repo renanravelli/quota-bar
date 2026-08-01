@@ -73,7 +73,7 @@ struct MascotAbsenceTests {
         #expect(content.sevenDay.utilization == "41%")
         #expect(content.fiveHour.reset != nil)
         #expect(content.selection != nil)
-        #expect(content.cadence != nil)
+        #expect(content.cadenceLine != nil)
         #expect(content.source != nil)
         #expect(!content.quitTitle.isEmpty)
     }

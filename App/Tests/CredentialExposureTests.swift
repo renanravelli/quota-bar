@@ -80,7 +80,7 @@ private enum Sweep {
 
     static func allStrings(of panel: PanelContent) -> [String] {
         var strings: [String] = [panel.situation, panel.quitTitle]
-        strings.append(contentsOf: [panel.selection, panel.cadence, panel.source].compactMap { $0 })
+        strings.append(contentsOf: [panel.selection, panel.cadenceLine, panel.source].compactMap { $0 })
         strings.append(contentsOf: [panel.credentialNotice, panel.sourceChangeNotice, panel.fixtureNotice].compactMap { $0 })
         strings.append(contentsOf: panel.contingencyLosses)
         strings.append(contentsOf: panel.pendencies)

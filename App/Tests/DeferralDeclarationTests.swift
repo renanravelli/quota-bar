@@ -16,8 +16,8 @@ struct DeferralDeclarationTests {
         let presenter = Journey.openPanel(over: Journey.state())
         let content = presenter.panelContent(at: Journey.readAt.addingTimeInterval(300))
 
-        #expect(content.cadence == Self.deferredLine)
-        #expect(content.cadence?.contains("ritmo base") == false)
+        #expect(content.cadenceLine == Self.deferredLine)
+        #expect(content.cadenceLine?.contains("ritmo base") == false)
     }
 
     @Test("QB-APP-001 AC-52: o painel usa o prazo fornecido e não recalcula o limiar")
@@ -28,9 +28,9 @@ struct DeferralDeclarationTests {
             over: Journey.state(deferralDeadline: Journey.readAt.addingTimeInterval(600))
         ).panelContent(at: observed)
 
-        #expect(published.cadence == Self.deferredLine)
+        #expect(published.cadenceLine == Self.deferredLine)
         #expect(
-            laterDeadline.cadence == Self.baseLine,
+            laterDeadline.cadenceLine == Self.baseLine,
             "o painel refez a conta do limiar em vez de usar o prazo publicado"
         )
     }
@@ -42,8 +42,8 @@ struct DeferralDeclarationTests {
         let presenter = Journey.openPanel(over: state, clock: { resumedAt })
         let content = presenter.panelContent(at: resumedAt)
 
-        #expect(content.cadence == Self.baseLine)
-        #expect(content.cadence?.contains("adiada") == false)
+        #expect(content.cadenceLine == Self.baseLine)
+        #expect(content.cadenceLine?.contains("adiada") == false)
         #expect(Journey.isMarkedStale(content.situation))
         #expect(content.situation.contains("há 8 horas"))
         #expect(presenter.indicatorText == "5h ~30%")
@@ -53,7 +53,7 @@ struct DeferralDeclarationTests {
     func theDeclarationStopsWhenTheReadingArrives() {
         let arrivedAt = Journey.readAt.addingTimeInterval(320)
         let presenter = Journey.openPanel(over: Journey.state())
-        #expect(presenter.panelContent(at: arrivedAt).cadence == Self.deferredLine)
+        #expect(presenter.panelContent(at: arrivedAt).cadenceLine == Self.deferredLine)
 
         presenter.receive(
             Journey.state(
@@ -65,7 +65,7 @@ struct DeferralDeclarationTests {
         )
         let content = presenter.panelContent(at: arrivedAt.addingTimeInterval(30))
 
-        #expect(content.cadence == Self.baseLine)
+        #expect(content.cadenceLine == Self.baseLine)
         #expect(content.situation.contains("há menos de um minuto"))
         for line in Journey.allStrings(of: content) {
             #expect(!line.lowercased().contains("adiad"), "resíduo de adiamento no painel: \(line)")
@@ -83,8 +83,8 @@ struct DeferralDeclarationTests {
         presenter.panelDidOpen()
         let secondOpening = presenter.panelContent(at: observed.addingTimeInterval(1))
 
-        #expect(firstOpening.cadence == Self.deferredLine)
-        #expect(secondOpening.cadence == Self.deferredLine)
+        #expect(firstOpening.cadenceLine == Self.deferredLine)
+        #expect(secondOpening.cadenceLine == Self.deferredLine)
         #expect(presenter.state.cycle?.cadence.nature == .base, "o intervalo fornecido é o de ritmo base")
     }
 }
@@ -120,7 +120,7 @@ struct DeferralPunctualityTests {
             #expect(crossing >= deadline, "o limiar disparou antes do prazo")
             #expect(crossing.timeIntervalSince(deadline) <= Self.budget)
         }
-        #expect(presenter.panelContent(at: Date()).cadence?.contains("adiada pelo sistema") == true)
+        #expect(presenter.panelContent(at: Date()).cadenceLine?.contains("adiada pelo sistema") == true)
     }
 
     @Test("QB-API-001 AC-45: com o painel fechado nada fica armado e nada dispara")

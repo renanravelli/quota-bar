@@ -49,15 +49,20 @@ final class AnchoredClock: Sendable {
 }
 
 enum TestCycle {
+    static let readAt = Date(timeIntervalSince1970: 1_700_000_000)
+
     static func scheduled(
         _ interval: Duration = .seconds(180),
         nature: ScheduledNature = .base,
         id: UInt64 = 1,
+        expectedReadingAt: Date? = nil,
         deferralDeadline: Date = .distantFuture
     ) -> CadenceCycle {
         CadenceCycle(
             id: id,
             cadence: ScheduledCadence(interval: interval, nature: nature)!,
+            expectedReadingAt: expectedReadingAt
+                ?? readAt.addingTimeInterval(TimeInterval(interval.components.seconds)),
             deferralDeadline: deferralDeadline
         )
     }

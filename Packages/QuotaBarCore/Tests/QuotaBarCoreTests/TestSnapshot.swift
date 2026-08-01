@@ -7,11 +7,13 @@ enum TestCycle {
         _ interval: Duration = .seconds(180),
         nature: ScheduledNature = .base,
         id: UInt64 = 1,
+        expectedReadingAt: Date? = nil,
         deferralDeadline: Date = .distantFuture
     ) -> CadenceCycle {
         CadenceCycle(
             id: id,
             cadence: ScheduledCadence(interval: interval, nature: nature)!,
+            expectedReadingAt: expectedReadingAt ?? TestSnapshot.readAt.adding(interval),
             deferralDeadline: deferralDeadline
         )
     }

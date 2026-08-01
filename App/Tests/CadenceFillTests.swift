@@ -8,7 +8,7 @@ private enum Fill {
     static let readAt = Date(timeIntervalSince1970: 1_700_000_000)
     static let opened = readAt.addingTimeInterval(60)
 
-    static func state(cadenceSeconds: Int = 180, reset: Date? = nil) -> QuotaState {
+    static func state(cadenceSeconds: Int = 180, reset: Date? = nil, expectedReadingAt: Date? = nil) -> QuotaState {
         let snapshot = QuotaSnapshot(
             fiveHour: WindowReading(
                 utilization: Utilization(originPercent: 50)!,
@@ -30,7 +30,7 @@ private enum Fill {
             credentialPresent: true,
             snapshot: snapshot,
             lastAttempt: .succeeded(at: readAt),
-            cycle: TestCycle.scheduled(.seconds(cadenceSeconds)),
+            cycle: TestCycle.scheduled(.seconds(cadenceSeconds), expectedReadingAt: expectedReadingAt),
             maxIdleCadenceSinceReading: .seconds(cadenceSeconds),
             source: .primaryProbe
         )
@@ -43,7 +43,7 @@ private enum Fill {
 
         return PanelContentBuilder.build(
             state: state, indicator: indicator, at: now, deferralLatch: &deferral
-        ).cadenceBar?.progress
+        ).cadence?.progress
     }
 }
 
@@ -60,6 +60,22 @@ struct CadenceFillTests {
         #expect(Set(samples).count == samples.count, "o preenchimento repetiu valores em vez de avançar")
         #expect(samples.first == 0)
         #expect(samples.last == 1, "o preenchimento não chegou a saturar na tela")
+    }
+
+    @Test("QB-APP-002 REQ-11 e ADR-010: o painel ancora no instante publicado, e não no da última leitura")
+    func thePanelAnchorsOnThePublishedInstant() throws {
+        let reanchoredAt = Fill.readAt.addingTimeInterval(600)
+        let state = Fill.state(expectedReadingAt: reanchoredAt.addingTimeInterval(180))
+
+        let published = try #require(state.cycle).expectedReadingAt
+        #expect(
+            published != Fill.readAt.addingTimeInterval(180),
+            "a fixture fez o instante publicado coincidir com o reconstruído da leitura"
+        )
+
+        #expect(Fill.progress(of: state, at: reanchoredAt) == 0, "a barra saturou com o ciclo corrente em dia")
+        #expect(Fill.progress(of: state, at: reanchoredAt.addingTimeInterval(90)) == 0.5)
+        #expect(Fill.progress(of: state, at: published) == 1)
     }
 
     @Test("QB-APP-002 AC-18: o preenchimento não herda a granularidade da contagem regressiva")

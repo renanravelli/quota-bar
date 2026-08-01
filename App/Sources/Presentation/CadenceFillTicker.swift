@@ -1,15 +1,4 @@
-import Foundation
 import QuotaBarCore
-
-enum CadenceFillPolicy {
-    static let stepsPerCadence = 120
-    static let fastest: Duration = .seconds(1)
-    static let slowest: Duration = .seconds(5)
-
-    static func refreshInterval(for cadence: Duration) -> Duration {
-        min(max(cadence / stepsPerCadence, fastest), slowest)
-    }
-}
 
 @MainActor
 final class CadenceFillTicker {

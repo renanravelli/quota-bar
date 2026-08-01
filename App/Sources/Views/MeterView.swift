@@ -23,7 +23,7 @@ struct MeterView: View {
 }
 
 struct CadenceBarView: View {
-    let bar: CadenceBar
+    let display: CadenceDisplay
 
     var body: some View {
         GeometryReader { geometry in
@@ -31,26 +31,26 @@ struct CadenceBarView: View {
                 Capsule().fill(Color(Palette.track))
                 Capsule()
                     .fill(Color(Palette.accent))
-                    .frame(width: geometry.size.width * bar.progress)
+                    .frame(width: geometry.size.width * display.progress)
             }
-            .overlay(alignment: .leading) { natureMark }
+            .overlay(alignment: .leading) { reinforcement }
         }
         .frame(height: 4)
         .accessibilityHidden(true)
     }
 
     @ViewBuilder
-    private var natureMark: some View {
-        switch bar.mark {
+    private var reinforcement: some View {
+        switch display.reinforcement {
         case .none:
             EmptyView()
-        case .idleDashes:
+        case .idle:
             Capsule()
                 .stroke(Color(Palette.textMuted), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-        case .failureRing:
+        case .failure:
             Capsule()
                 .stroke(Color(Palette.bad), lineWidth: 1)
-        case .deferralDashes:
+        case .deferral:
             Capsule()
                 .stroke(Color(Palette.structuralWeak), style: StrokeStyle(lineWidth: 1, dash: [1, 2]))
         }

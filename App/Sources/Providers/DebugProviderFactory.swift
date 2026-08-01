@@ -53,6 +53,7 @@ enum ProviderFactory {
             cycle: CadenceCycle(
                 id: 1,
                 cadence: ScheduledCadence(interval: .seconds(600), nature: .widenedByFailure)!,
+                expectedReadingAt: Date().addingTimeInterval(600),
                 deferralDeadline: .distantFuture
             ),
             maxIdleCadenceSinceReading: ScheduledCadence.floor,
@@ -90,6 +91,7 @@ enum ProviderFactory {
             cycle: CadenceCycle(
                 id: readSequence,
                 cadence: ScheduledCadence(interval: .seconds(180), nature: .base)!,
+                expectedReadingAt: now.addingTimeInterval(180),
                 deferralDeadline: now.addingTimeInterval(270)
             ),
             maxIdleCadenceSinceReading: .seconds(180),

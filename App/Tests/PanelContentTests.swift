@@ -305,9 +305,9 @@ struct PanelContentTests {
             )
         )
 
-        #expect(idle.cadence == "Atualizando a cada 15 minutos — reduzido por ociosidade.")
-        #expect(base.cadence == "Atualizando a cada 3 minutos — ritmo base.")
-        #expect(widened.cadence == "Atualizando a cada 30 minutos — ampliado por falha.")
+        #expect(idle.cadenceLine == "Atualizando a cada 15 minutos — reduzido por ociosidade.")
+        #expect(base.cadenceLine == "Atualizando a cada 3 minutos — ritmo base.")
+        #expect(widened.cadenceLine == "Atualizando a cada 30 minutos — ampliado por falha.")
     }
 
     @Test("QB-APP-001 AC-36: a cadência voltar ao ritmo base não muda o estado do indicador")
