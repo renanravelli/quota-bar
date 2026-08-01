@@ -1,0 +1,18 @@
+{
+  "images": [
+    {
+      "filename": "MascotCritical.png",
+      "idiom": "universal",
+      "scale": "1x"
+    },
+    {
+      "filename": "MascotCritical@2x.png",
+      "idiom": "universal",
+      "scale": "2x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -1,0 +1,139 @@
+import QuotaBarCore
+import SwiftUI
+
+struct CredentialSetupView: View {
+    let model: CredentialSetupModel
+    let shouldAnimateEntry: Bool
+
+    @Environment(\.colorSchemeContrast) private var contrast
+    @State private var pasted = ""
+    @State private var hasEntered = false
+
+    private var content: CredentialSetupContent {
+        model.content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(content.title)
+                .font(.title3)
+                .fontWeight(.semibold)
+                .accessibilityAddTraits(.isHeader)
+
+            if let precondition = content.precondition {
+                Text(precondition)
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color(Palette.warning))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if let notice = content.configuredNotice {
+                bodyText(notice)
+            }
+
+            if content.showsField {
+                instructions
+                credentialField
+            }
+
+            if let message = content.message {
+                bodyText(message.text)
+                    .foregroundStyle(Color(Palette.text))
+            }
+
+            actions
+        }
+        .padding(16)
+        .frame(minWidth: 380, maxWidth: 460, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(Color(PanelSurface.background))
+        .opacity(hasEntered ? 1 : 0)
+        .task {
+            await model.refresh()
+            guard shouldAnimateEntry else {
+                hasEntered = true
+                return
+            }
+            withAnimation(.easeOut(duration: PanelAnimation.entryDuration.seconds)) {
+                hasEntered = true
+            }
+        }
+        .onDisappear {
+            model.cancel()
+            pasted = ""
+        }
+    }
+
+    private var instructions: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            bodyText(content.commandStep)
+
+            HStack(spacing: 8) {
+                Text(content.command)
+                    .font(.system(.callout, design: .monospaced))
+                    .textSelection(.enabled)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(PanelSurface.card))
+                Button(content.copyCommandTitle) { model.copyCommand() }
+                    .accessibilityLabel(Text(content.copyCommandTitle))
+            }
+
+            ForEach(content.steps, id: \.self) { step in
+                bodyText(step)
+            }
+        }
+    }
+
+    private var credentialField: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(content.fieldLabel)
+                .font(.footnote)
+                .foregroundStyle(secondaryStyle)
+            SecureField(content.fieldLabel, text: $pasted)
+                .textFieldStyle(.roundedBorder)
+                .labelsHidden()
+                .accessibilityLabel(Text(content.fieldLabel))
+        }
+    }
+
+    private var actions: some View {
+        HStack(spacing: 8) {
+            if content.showsField {
+                Button(content.saveTitle) { save() }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!content.canSave)
+            }
+            if let cancelTitle = content.cancelTitle {
+                Button(cancelTitle) { model.cancel() }
+            }
+            if let replaceTitle = content.replaceTitle {
+                Button(replaceTitle) { model.beginReplacement() }
+            }
+            if let removeTitle = content.removeTitle {
+                Button(removeTitle) { Task { await model.remove() } }
+            }
+        }
+    }
+
+    private func save() {
+        let value = pasted
+        pasted = ""
+        Task { await model.save(value) }
+    }
+
+    private var secondaryStyle: HierarchicalShapeStyle {
+        contrast == .increased ? .primary : .secondary
+    }
+
+    private func bodyText(_ value: String) -> some View {
+        Text(value)
+            .font(.callout)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}

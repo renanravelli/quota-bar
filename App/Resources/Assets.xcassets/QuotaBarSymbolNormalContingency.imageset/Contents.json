@@ -1,0 +1,21 @@
+{
+  "images": [
+    {
+      "filename": "QuotaBarSymbolNormalContingency.png",
+      "idiom": "universal",
+      "scale": "1x"
+    },
+    {
+      "filename": "QuotaBarSymbolNormalContingency@2x.png",
+      "idiom": "universal",
+      "scale": "2x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  },
+  "properties": {
+    "template-rendering-intent": "template"
+  }
+}
