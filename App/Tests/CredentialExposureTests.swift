@@ -144,7 +144,7 @@ private enum Sweep {
 
 @Suite("Não exposição da credencial")
 struct CredentialExposureTests {
-    @Test("QB-APP-001 AC-28: o texto do indicador nunca ecoa string vinda da origem")
+    @Test("o texto do indicador nunca ecoa string vinda da origem")
     func indicatorTextNeverEchoesOriginStrings() {
         for testCase in Sweep.everyState() {
             let surfaces = Sweep.surfaces(testCase.state, afterSeconds: testCase.afterSeconds)
@@ -152,7 +152,7 @@ struct CredentialExposureTests {
         }
     }
 
-    @Test("QB-APP-001 AC-28: o rótulo de acessibilidade nunca ecoa string vinda da origem")
+    @Test("o rótulo de acessibilidade nunca ecoa string vinda da origem")
     func accessibilityLabelNeverEchoesOriginStrings() {
         for testCase in Sweep.everyState() {
             let surfaces = Sweep.surfaces(testCase.state, afterSeconds: testCase.afterSeconds)
@@ -160,7 +160,7 @@ struct CredentialExposureTests {
         }
     }
 
-    @Test("QB-APP-001 AC-28: nenhuma linha do painel ecoa string vinda da origem")
+    @Test("nenhuma linha do painel ecoa string vinda da origem")
     func noPanelLineEchoesOriginStrings() {
         for testCase in Sweep.everyState() {
             let surfaces = Sweep.surfaces(testCase.state, afterSeconds: testCase.afterSeconds)
@@ -170,7 +170,7 @@ struct CredentialExposureTests {
         }
     }
 
-    @Test("QB-APP-001 AC-32: janela limitante não reconhecida é declarada como condição, sem citar a carga")
+    @Test("janela limitante não reconhecida é declarada como condição, sem citar a carga")
     func unrecognisedBindingWindowIsDeclaredWithoutThePayload() {
         var declared = 0
 
@@ -186,7 +186,7 @@ struct CredentialExposureTests {
         #expect(declared > 0, "o caso de janela não reconhecida não foi exercitado")
     }
 
-    @Test("QB-APP-001 AC-32: o valor cru segue preservado no modelo, fora da interface")
+    @Test("o valor cru segue preservado no modelo, fora da interface")
     func rawValueRemainsAvailableInTheModel() {
         let snapshot = Sweep.snapshot(percent: "42", source: .primaryProbe, binding: .unrecognized(canary))
 
@@ -195,7 +195,7 @@ struct CredentialExposureTests {
             == .chosenByApp(.fiveHour, reason: .originReportedUnknownValue(canary)))
     }
 
-    @Test("QB-APP-001 AC-28: a ação de encerrar está presente nos seis estados, nos dois modos de fonte")
+    @Test("a ação de encerrar está presente nos seis estados, nos dois modos de fonte")
     func quitSurvivesTheWholeSweep() {
         for testCase in Sweep.everyState() {
             let surfaces = Sweep.surfaces(testCase.state, afterSeconds: testCase.afterSeconds)
@@ -203,7 +203,7 @@ struct CredentialExposureTests {
         }
     }
 
-    @Test("QB-APP-001 REQ-14 e ADR-003: o estado de cota não carrega valor de credencial, apenas a indicação booleana")
+    @Test("o estado de cota não carrega valor de credencial, apenas a indicação booleana")
     func quotaStateCarriesNoCredentialValue() {
         let state = Sweep.state(
             snapshot: Sweep.snapshot(percent: "42", source: .primaryProbe, binding: .window(.fiveHour)),
@@ -219,7 +219,7 @@ struct CredentialExposureTests {
         #expect(credentialMembers.first?.value is Bool)
     }
 
-    @Test("QB-APP-001 REQ-14: nenhuma superfície muda de conteúdo conforme a credencial exista ou não, além da situação declarada")
+    @Test("nenhuma superfície muda de conteúdo conforme a credencial exista ou não, além da situação declarada")
     func credentialPresenceOnlyChangesDeclaredLines() {
         let snapshot = Sweep.snapshot(percent: "33", source: .contingencyStatusLine, binding: nil)
         let withCredential = Sweep.state(

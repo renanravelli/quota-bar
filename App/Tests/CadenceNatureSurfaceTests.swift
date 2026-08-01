@@ -108,7 +108,7 @@ private struct TextOnly: Hashable {
 
 @Suite("Distinção das naturezas de cadência")
 struct CadenceNatureSurfaceTests {
-    @Test("QB-APP-002 AC-18: as quatro naturezas se distinguem com a cor removida do painel")
+    @Test("as quatro naturezas se distinguem com a cor removida do painel")
     func theFourNaturesAreDistinctWithoutColor() throws {
         let observed = CadenceSurface.readAt.addingTimeInterval(90)
         let contents = CadenceSurface.fourNatures.map { CadenceSurface.content(of: $0.state, at: observed) }
@@ -119,7 +119,7 @@ struct CadenceNatureSurfaceTests {
         #expect(contents.map(\.fiveHour.tint).allSatisfy { $0 == contents[0].fiveHour.tint })
     }
 
-    @Test("QB-APP-002 AC-18: ignorando a barra inteira, a linha de cadência continua distinguindo as quatro")
+    @Test("ignorando a barra inteira, a linha de cadência continua distinguindo as quatro")
     func ignoringTheBarLosesNoInformation() {
         let observed = CadenceSurface.readAt.addingTimeInterval(90)
         let contents = CadenceSurface.fourNatures.map { CadenceSurface.content(of: $0.state, at: observed) }
@@ -132,7 +132,7 @@ struct CadenceNatureSurfaceTests {
         )
     }
 
-    @Test("QB-APP-002 AC-18: a barra representa o progresso até a próxima leitura nas quatro naturezas")
+    @Test("a barra representa o progresso até a próxima leitura nas quatro naturezas")
     func theBarShowsProgressInEveryNature() throws {
         let elapsed: TimeInterval = 90
 
@@ -144,7 +144,7 @@ struct CadenceNatureSurfaceTests {
         }
     }
 
-    @Test("QB-APP-002 AC-34: com o prazo do ciclo fora do trecho observado, só o preenchimento muda na barra")
+    @Test("com o prazo do ciclo fora do trecho observado, só o preenchimento muda na barra")
     func onlyTheFillMovesWhileTheStateIsConstant() throws {
         let observedUntil = CadenceSurface.readAt.addingTimeInterval(10)
         let deadline = CadenceSurface.readAt.addingTimeInterval(270)
@@ -159,7 +159,7 @@ struct CadenceNatureSurfaceTests {
         #expect(Set(bars.map(\.progress)).count == bars.count, "o preenchimento não se moveu")
     }
 
-    @Test("QB-APP-002 AC-34: com estado novo, barra e texto mudam de natureza na mesma atualização")
+    @Test("com estado novo, barra e texto mudam de natureza na mesma atualização")
     func theBarAndTheTextChangeTogetherOnNewState() throws {
         let frames = CadenceSurface.frames(over: [
             (CadenceSurface.state(nature: .base), [60, 90]),
@@ -169,7 +169,7 @@ struct CadenceNatureSurfaceTests {
         try expectTheBarNeverContradictsTheText(frames)
     }
 
-    @Test("QB-APP-002 AC-35: passado o instante previsto, o preenchimento chega a cheio e para")
+    @Test("passado o instante previsto, o preenchimento chega a cheio e para")
     func theFillSaturatesAndStops() throws {
         let deadline = CadenceSurface.readAt.addingTimeInterval(270)
         let frames = CadenceSurface.frames(
@@ -192,7 +192,7 @@ struct CadenceNatureSurfaceTests {
         #expect(progress.drop { $0 < 1 }.allSatisfy { $0 == 1 }, "o preenchimento voltou a andar depois de saturar")
     }
 
-    @Test("QB-APP-002 AC-35: pela passagem do tempo, a variante só muda na atualização em que o texto muda")
+    @Test("pela passagem do tempo, a variante só muda na atualização em que o texto muda")
     func theVariantChangesOnlyWithTheTextAsTimePasses() throws {
         let frames = CadenceSurface.frames(
             of: CadenceSurface.state(deferralDeadline: CadenceSurface.readAt.addingTimeInterval(270)),
@@ -208,7 +208,7 @@ struct CadenceNatureSurfaceTests {
         )
     }
 
-    @Test("QB-APP-002 REQ-11: cheio e parado não identifica adiamento — a espera por falha satura igual")
+    @Test("cheio e parado não identifica adiamento — a espera por falha satura igual")
     func saturationDoesNotIdentifyDeferral() throws {
         let frames = CadenceSurface.frames(of: CadenceSurface.state(nature: .widenedByFailure), from: 180, to: 360, step: 5)
         let bars = try frames.map { try #require($0.cadence) }

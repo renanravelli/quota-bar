@@ -49,7 +49,7 @@ private enum Fill {
 
 @Suite("Preenchimento da barra de cadência")
 struct CadenceFillTests {
-    @Test("QB-APP-002 AC-18: o preenchimento avança sem que haja instante de reset conhecido")
+    @Test("o preenchimento avança sem que haja instante de reset conhecido")
     func fillAdvancesWithoutAKnownReset() throws {
         let state = Fill.state(reset: nil)
         let samples = try stride(from: 0.0, through: 180.0, by: 30.0).map { second in
@@ -62,7 +62,7 @@ struct CadenceFillTests {
         #expect(samples.last == 1, "o preenchimento não chegou a saturar na tela")
     }
 
-    @Test("QB-APP-002 REQ-11 e ADR-010: o painel ancora no instante publicado, e não no da última leitura")
+    @Test("o painel ancora no instante publicado, e não no da última leitura")
     func thePanelAnchorsOnThePublishedInstant() throws {
         let reanchoredAt = Fill.readAt.addingTimeInterval(600)
         let state = Fill.state(expectedReadingAt: reanchoredAt.addingTimeInterval(180))
@@ -78,7 +78,7 @@ struct CadenceFillTests {
         #expect(Fill.progress(of: state, at: published) == 1)
     }
 
-    @Test("QB-APP-002 AC-18: o preenchimento não herda a granularidade da contagem regressiva")
+    @Test("o preenchimento não herda a granularidade da contagem regressiva")
     func fillDoesNotInheritTheCountdownGranularity() throws {
         let coarse = CountdownPolicy.refreshInterval(for: .minutesOnly)
         let fill = CadenceFillPolicy.refreshInterval(for: .seconds(180))
@@ -92,7 +92,7 @@ struct CadenceFillTests {
         #expect(stepsAtTheFillPace == CadenceFillPolicy.stepsPerCadence)
     }
 
-    @Test("QB-APP-002 REQ-18: o preenchimento nunca é amostrado mais rápido que 1 Hz, nem mais lento que 5 s")
+    @Test("o preenchimento nunca é amostrado mais rápido que 1 Hz, nem mais lento que 5 s")
     func theFillPaceStaysWithinItsBounds() {
         for seconds in [60, 120, 180, 300, 900, 3_600] {
             let interval = CadenceFillPolicy.refreshInterval(for: .seconds(seconds))
@@ -117,7 +117,7 @@ struct CadenceFillTests {
 @MainActor
 @Suite("Temporizador do preenchimento da barra de cadência")
 struct CadenceFillTickerTests {
-    @Test("QB-APP-002 AC-18: o temporizador corre sem depender de instante de reset conhecido")
+    @Test("o temporizador corre sem depender de instante de reset conhecido")
     func theTickerRunsWithoutAnyDeadline() async throws {
         let presenter = IndicatorPresenter(
             provider: RecordingQuotaStateProvider(),
@@ -139,7 +139,7 @@ struct CadenceFillTickerTests {
         ticker.stop()
     }
 
-    @Test("QB-APP-002 REQ-11: sem cadência não há preenchimento a mover, e nada é iniciado")
+    @Test("sem cadência não há preenchimento a mover, e nada é iniciado")
     func noCadenceStartsNothing() async throws {
         let ticker = CadenceFillTicker()
         ticker.start(cadence: nil)
@@ -149,7 +149,7 @@ struct CadenceFillTickerTests {
         #expect(ticker.tickCount == 0)
     }
 
-    @Test("QB-APP-002 REQ-11: fechar o painel para o preenchimento, e ele não volta sozinho")
+    @Test("fechar o painel para o preenchimento, e ele não volta sozinho")
     func stoppingHaltsTheFillTicker() async throws {
         let ticker = CadenceFillTicker()
         ticker.start(cadence: ScheduledCadence(interval: ScheduledCadence.floor, nature: .base))
@@ -166,7 +166,7 @@ struct CadenceFillTickerTests {
         #expect(ticker.tickCount == whileRunning, "o temporizador continuou depois de parar")
     }
 
-    @Test("QB-APP-002 REQ-11: reiniciar substitui o temporizador em vez de acumular outro")
+    @Test("reiniciar substitui o temporizador de preenchimento em vez de acumular outro")
     func restartingReplacesTheFillTicker() async throws {
         let ticker = CadenceFillTicker()
         let cadence = ScheduledCadence(interval: ScheduledCadence.floor, nature: .base)
@@ -179,7 +179,7 @@ struct CadenceFillTickerTests {
         ticker.stop()
     }
 
-    @Test("QB-APP-002 AC-20: o instante de renderização é o corrente, sem depender de marcação de temporizador")
+    @Test("o instante de renderização é o corrente, sem depender de marcação de temporizador")
     func theRenderInstantDoesNotDependOnAnyTickerHavingMarkedIt() {
         let launch = Fill.readAt
         let opening = Fill.readAt.addingTimeInterval(3 * 3_600)
@@ -191,7 +191,7 @@ struct CadenceFillTickerTests {
         #expect(render.instant == opening, "a renderização partiu do instante em que o aplicativo subiu")
     }
 
-    @Test("QB-APP-002 AC-18: o instante de renderização avança no passo do preenchimento, não no da contagem")
+    @Test("o instante de renderização avança no passo do preenchimento, não no da contagem")
     func theFillPaceDrivesTheRenderInstantWhileTheCountdownIsCoarse() async throws {
         let render = PanelRenderClock()
         let countdown = CountdownTicker(requestRender: render.mark)

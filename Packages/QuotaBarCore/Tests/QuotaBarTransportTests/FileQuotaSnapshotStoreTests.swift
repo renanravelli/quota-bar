@@ -100,7 +100,7 @@ enum StoredReadingFixture {
 
 @Suite("Guarda do último estado de cota em arquivo")
 struct FileQuotaSnapshotStoreTests {
-    @Test("AC-29: a leitura gravada volta idêntica, com o instante original")
+    @Test("a leitura gravada volta idêntica, com o instante original")
     func aPersistedReadingComesBackIdentical() async throws {
         let temporary = TemporaryStore()
         let original = StoredReadingFixture.snapshot()
@@ -113,7 +113,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(restored.readSequence == 7)
     }
 
-    @Test("AC-29: a idade do estado restaurado é a real, medida do instante original")
+    @Test("a idade do estado restaurado é a real, medida do instante original")
     func theRestoredAgeIsTheRealOne() async throws {
         let temporary = TemporaryStore()
         let elapsed: TimeInterval = 11 * 60
@@ -129,7 +129,7 @@ struct FileQuotaSnapshotStoreTests {
     }
 
     @Test(
-        "AC-29: o vocabulário da origem sobrevive à ida e à volta",
+        "o vocabulário da origem sobrevive à ida e à volta",
         arguments: [
             WindowStatus.allowed,
             .allowedWarning,
@@ -149,7 +149,7 @@ struct FileQuotaSnapshotStoreTests {
     }
 
     @Test(
-        "AC-29: janela limitante e fonte sobrevivem à ida e à volta",
+        "janela limitante e fonte sobrevivem à ida e à volta",
         arguments: [
             BindingWindow.window(.fiveHour),
             .window(.sevenDay),
@@ -170,14 +170,14 @@ struct FileQuotaSnapshotStoreTests {
         #expect(restored.source == .contingencyStatusLine)
     }
 
-    @Test("AC-32: arquivo ausente não é estado restaurado nem falha")
+    @Test("arquivo ausente não é estado restaurado nem falha")
     func anAbsentFileRestoresNothing() async {
         let temporary = TemporaryStore()
 
         #expect(await temporary.store.restore() == nil)
     }
 
-    @Test("AC-32: conteúdo ilegível é descartado inteiro, e a guarda segue utilizável")
+    @Test("conteúdo ilegível é descartado inteiro, e a guarda segue utilizável")
     func illegibleContentIsDiscardedWhole() async throws {
         let temporary = TemporaryStore()
         temporary.write(Data([0x00, 0xFF, 0x10, 0x42, 0x00]))
@@ -189,7 +189,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(await temporary.store.restore() == snapshot)
     }
 
-    @Test("AC-32: arquivo truncado é descartado inteiro")
+    @Test("arquivo truncado é descartado inteiro")
     func aTruncatedFileIsDiscardedWhole() async throws {
         let temporary = TemporaryStore()
         await temporary.store.persist(StoredReadingFixture.snapshot())
@@ -200,7 +200,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(await temporary.store.restore() == nil)
     }
 
-    @Test("AC-32: versão futura é descartada inteira, sem interpretação parcial")
+    @Test("versão futura é descartada inteira, sem interpretação parcial")
     func aFutureVersionIsDiscardedWhole() async throws {
         let temporary = TemporaryStore()
         await temporary.store.persist(StoredReadingFixture.snapshot())
@@ -210,7 +210,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(await temporary.store.restore() == nil)
     }
 
-    @Test("AC-32: campo fora do domínio válido descarta o arquivo, em vez de virar leitura com zeros")
+    @Test("campo fora do domínio válido descarta o arquivo, em vez de virar leitura com zeros")
     func anOutOfRangeFieldDiscardsTheWholeFile() async throws {
         let temporary = TemporaryStore()
         await temporary.store.persist(StoredReadingFixture.snapshot())
@@ -224,7 +224,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(await temporary.store.restore() == nil)
     }
 
-    @Test("AC-32: fonte desconhecida descarta o arquivo, em vez de ser adivinhada")
+    @Test("fonte desconhecida descarta o arquivo, em vez de ser adivinhada")
     func anUnknownSourceDiscardsTheWholeFile() async throws {
         let temporary = TemporaryStore()
         await temporary.store.persist(StoredReadingFixture.snapshot())
@@ -234,7 +234,7 @@ struct FileQuotaSnapshotStoreTests {
         #expect(await temporary.store.restore() == nil)
     }
 
-    @Test("AC-33: o arquivo gravado tem exatamente os campos de cota, e nenhum outro")
+    @Test("o arquivo gravado tem exatamente os campos de cota, e nenhum outro")
     func theWrittenFileCarriesQuotaFieldsOnly() async throws {
         let temporary = TemporaryStore()
         await temporary.store.persist(StoredReadingFixture.snapshot())
@@ -262,7 +262,7 @@ struct FileQuotaSnapshotStoreTests {
         }
     }
 
-    @Test("AC-41 e contratos §9.9: o ciclo não integra o que se grava, e um ciclo no arquivo não é lido")
+    @Test("o ciclo não integra o que se grava, e um ciclo no arquivo não é lido")
     func theCycleIsNeitherWrittenNorRead() async throws {
         let temporary = TemporaryStore()
         let original = StoredReadingFixture.snapshot()

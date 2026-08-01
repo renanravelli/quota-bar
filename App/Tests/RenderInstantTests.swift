@@ -84,7 +84,7 @@ enum Journey {
 @MainActor
 @Suite("Instante único de renderização")
 struct RenderInstantTests {
-    @Test("QB-APP-001 AC-57: a idade acompanha o relógio de 3 a 20 minutos, sem estado novo fornecido")
+    @Test("a idade acompanha o relógio de 3 a 20 minutos, sem estado novo fornecido")
     func theAgeFollowsTheClockWhileThePanelIsOpen() {
         let presenter = Journey.openPanel(over: Journey.state(deferralDeadline: .distantFuture))
 
@@ -106,7 +106,7 @@ struct RenderInstantTests {
         #expect(Set(ages.map(\.displayed)).count == 18, "a idade congelou em vez de acompanhar o relógio")
     }
 
-    @Test("QB-APP-001 AC-57: marcação e idade nunca discordam, inclusive no instante do cruzamento")
+    @Test("marcação e idade nunca discordam, inclusive no instante do cruzamento")
     func theMarkingAndTheAgeNeverDisagree() {
         let presenter = Journey.openPanel(over: Journey.state(deferralDeadline: .distantFuture))
         let limit = Int(Journey.stalenessLimit) / 60
@@ -128,7 +128,7 @@ struct RenderInstantTests {
         #expect(frames.contains { !Journey.isMarkedStale($0) }, "o percurso já começou desatualizado")
     }
 
-    @Test("QB-APP-002 AC-21: em regime só os cinco conteúdos dirigidos pelo tempo mudam, e os cruzamentos aparecem")
+    @Test("em regime só os cinco conteúdos dirigidos pelo tempo mudam, e os cruzamentos aparecem")
     func onlyTheFiveTimeDrivenContentsChangeInRegime() throws {
         let presenter = Journey.openPanel(over: Journey.state())
         let frames = stride(from: 120.0, through: 900.0, by: 5.0).map { elapsed in

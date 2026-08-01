@@ -37,7 +37,7 @@ private enum Age {
 
 @Suite("Régua da idade exibida")
 struct AgeDisplayTests {
-    @Test("contratos §9.10: a frase muda exatamente nos instantes que o limiar devolve")
+    @Test("a frase muda exatamente nos instantes que o limiar devolve")
     func thePhraseChangesExactlyAtTheThresholds() {
         var observed: [TimeInterval] = []
         var previous = Age.phrase(after: 0)
@@ -52,7 +52,7 @@ struct AgeDisplayTests {
         #expect(!observed.isEmpty)
     }
 
-    @Test("QB-APP-002 AC-28: o piso da idade não é uma fonte de 1 Hz")
+    @Test("o piso da idade não é uma fonte de 1 Hz")
     func theAgeFloorIsNotAOneHertzSource() {
         let thresholds = Age.thresholds(through: 3_600)
 
@@ -60,7 +60,7 @@ struct AgeDisplayTests {
         #expect(zip(thresholds, thresholds.dropFirst()).allSatisfy { $1 - $0 >= 60 })
     }
 
-    @Test("QB-APP-001 REQ-10: leitura no futuro envelhece a partir de zero, sem referência a tempo futuro")
+    @Test("leitura no futuro envelhece a partir de zero, sem referência a tempo futuro")
     func aReadingInTheFutureAgesFromZero() {
         let before = Age.readAt.addingTimeInterval(-30)
 
@@ -68,12 +68,12 @@ struct AgeDisplayTests {
         #expect(AgeDisplay.nextChange(ofReadingAt: Age.readAt, now: before) == Age.readAt.addingTimeInterval(60))
     }
 
-    @Test("contratos §9.10: sem leitura não há idade a envelhecer, e nada é agendado")
+    @Test("sem leitura não há idade a envelhecer, e nada é agendado")
     func aStateWithoutAReadingSchedulesNothing() {
         #expect(AgeSchedule.nextThreshold(for: .unconfigured, now: Age.readAt) == nil)
     }
 
-    @Test("contratos §9.10: com leitura, o limiar do estado é o da régua")
+    @Test("com leitura, o limiar do estado é o da régua")
     func theStateThresholdIsTheRulerThreshold() throws {
         let state = Age.state()
         let now = Age.readAt.addingTimeInterval(90)

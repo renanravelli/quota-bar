@@ -33,7 +33,7 @@ struct StalenessScheduleTests {
         IndicatorStateResolver.resolve(state: state, latch: &latch, now: now)
     }
 
-    @Test("AC-22: retomada de suspensão marca obsolescência sem novo estado fornecido")
+    @Test("retomada de suspensão marca obsolescência sem novo estado fornecido")
     func resumeFromSuspensionReevaluatesAge() {
         let state = Self.state()
         var latch = StaleLatch()
@@ -50,7 +50,7 @@ struct StalenessScheduleTests {
         #expect(IndicatorTextFormatter.text(for: afterResuming) == "5h ~30%")
     }
 
-    @Test("AC-23: leitura posterior ao relógio corrente tem idade zero e permanece pronta")
+    @Test("leitura posterior ao relógio corrente tem idade zero e permanece pronta")
     func readingInTheFutureIsTreatedAsAgeZero() {
         let state = Self.state()
         var latch = StaleLatch()
@@ -61,7 +61,7 @@ struct StalenessScheduleTests {
         #expect(!latch.isLatched)
     }
 
-    @Test("AC-23: com leitura no futuro o próximo limiar continua no futuro")
+    @Test("com leitura no futuro o próximo limiar continua no futuro")
     func futureReadingStillSchedulesForwards() {
         let now = Self.readAt.addingTimeInterval(-3_600)
         let threshold = StalenessSchedule.nextThreshold(for: Self.state(), now: now)
@@ -70,14 +70,14 @@ struct StalenessScheduleTests {
         #expect(threshold! > now)
     }
 
-    @Test("AC-13: sem reset informado, o limiar é o prazo de obsolescência da leitura")
+    @Test("sem reset informado, o limiar é o prazo de obsolescência da leitura")
     func thresholdIsTheStalenessDeadline() {
         let threshold = StalenessSchedule.nextThreshold(for: Self.state(), now: Self.readAt)
 
         #expect(threshold == Self.readAt.addingTimeInterval(600))
     }
 
-    @Test("AC-35: com ociosidade no teto o prazo acompanha o limite de trinta minutos")
+    @Test("com ociosidade no teto o prazo acompanha o limite de trinta minutos")
     func thresholdFollowsIdleCadence() {
         let threshold = StalenessSchedule.nextThreshold(
             for: Self.state(maxIdle: .seconds(900)),
@@ -87,7 +87,7 @@ struct StalenessScheduleTests {
         #expect(threshold == Self.readAt.addingTimeInterval(1_800))
     }
 
-    @Test("AC-14: o reset da janela exibida antecipa o limiar quando vem antes")
+    @Test("o reset da janela exibida antecipa o limiar quando vem antes")
     func resetWinsWhenItComesFirst() {
         let reset = Self.readAt.addingTimeInterval(60)
         let threshold = StalenessSchedule.nextThreshold(
@@ -98,7 +98,7 @@ struct StalenessScheduleTests {
         #expect(threshold == reset)
     }
 
-    @Test("AC-13: o prazo de obsolescência vence quando o reset é mais distante")
+    @Test("o prazo de obsolescência vence quando o reset é mais distante")
     func stalenessDeadlineWinsWhenResetIsFurther() {
         let threshold = StalenessSchedule.nextThreshold(
             for: Self.state(resetsAt: Self.readAt.addingTimeInterval(7_200)),
@@ -108,7 +108,7 @@ struct StalenessScheduleTests {
         #expect(threshold == Self.readAt.addingTimeInterval(600))
     }
 
-    @Test("AC-22: passados todos os limiares não há mais nada a agendar")
+    @Test("passados todos os limiares não há mais nada a agendar")
     func noThresholdRemainsAfterAllHavePassed() {
         let threshold = StalenessSchedule.nextThreshold(
             for: Self.state(resetsAt: Self.readAt.addingTimeInterval(60)),
@@ -118,7 +118,7 @@ struct StalenessScheduleTests {
         #expect(threshold == nil)
     }
 
-    @Test("AC-8: sem leitura não há limiar de tempo a agendar")
+    @Test("sem leitura não há limiar de tempo a agendar")
     func noThresholdWithoutSnapshot() {
         let state = QuotaState(
             credentialPresent: true,
@@ -132,7 +132,7 @@ struct StalenessScheduleTests {
         #expect(StalenessSchedule.nextThreshold(for: state, now: Self.readAt) == nil)
     }
 
-    @Test("AC-22: um estado novo reagenda o limiar a partir da leitura nova")
+    @Test("um estado novo reagenda o limiar a partir da leitura nova")
     func newStateReschedulesFromTheNewReading() {
         let later = Self.readAt.addingTimeInterval(300)
         let threshold = StalenessSchedule.nextThreshold(
@@ -143,7 +143,7 @@ struct StalenessScheduleTests {
         #expect(threshold == later.addingTimeInterval(600))
     }
 
-    @Test("REQ-12: nada muda entre agora e o limiar, então um único disparo basta")
+    @Test("nada muda entre agora e o limiar, então um único disparo basta")
     func verdictIsConstantUntilTheThreshold() {
         let state = Self.state()
         let threshold = StalenessSchedule.nextThreshold(for: state, now: Self.readAt)!

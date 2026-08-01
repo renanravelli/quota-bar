@@ -34,7 +34,7 @@ struct CycleDeadlineTests {
         return nil
     }
 
-    @Test("AC-55: olhar a cada 4 minutos não empurra a entrada na condição para frente")
+    @Test("olhar a cada 4 minutos não empurra a entrada na condição para frente")
     func lookingNeverPostponesTheEntrance() throws {
         let untouched = try #require(Self.firstDeferredSecond(openingThePanelEvery: nil))
         let watched = try #require(Self.firstDeferredSecond(openingThePanelEvery: 240))
@@ -43,7 +43,7 @@ struct CycleDeadlineTests {
         #expect(untouched <= 1_800)
     }
 
-    @Test("AC-53: reagendar por chegada de observador não apaga um atraso vigente")
+    @Test("reagendar por chegada de observador não apaga um atraso vigente")
     func reschedulingNeverErasesAStandingDeferral() {
         var planner = ProbePlanner(startingAt: Self.start)
         planner.recordReading(utilizationChanged: false, at: Self.start)
@@ -57,7 +57,7 @@ struct CycleDeadlineTests {
         #expect(planner.cadence.nature == .base)
     }
 
-    @Test("AC-54: entrar e sair dez vezes não faz a condição oscilar nem provoca leitura")
+    @Test("entrar e sair dez vezes não faz a condição oscilar nem provoca leitura")
     func enteringAndLeavingNeverOscillatesTheCondition() {
         var planner = ProbePlanner(startingAt: Self.start)
         planner.recordReading(utilizationChanged: false, at: Self.start)
@@ -76,7 +76,7 @@ struct CycleDeadlineTests {
         #expect(planner.lastProbeAt == lastProbe)
     }
 
-    @Test("AC-48: a chegada da leitura encerra o ciclo e o seguinte nasce pontual")
+    @Test("a chegada da leitura encerra o ciclo e o seguinte nasce pontual")
     func aReadingEndsTheCycle() {
         var planner = Self.plannerHoldingItsFirstReading()
         let late = Self.second(400)
@@ -90,7 +90,7 @@ struct CycleDeadlineTests {
         #expect(planner.cadence.nature == .base)
     }
 
-    @Test("AC-49: a falha que amplia a cadência encerra o ciclo e não vira adiamento")
+    @Test("a falha que amplia a cadência encerra o ciclo e não vira adiamento")
     func aWideningFailureEndsTheCycle() {
         var planner = Self.plannerHoldingItsFirstReading()
         let late = Self.second(400)
@@ -102,7 +102,7 @@ struct CycleDeadlineTests {
         #expect(planner.cadence.nature == .widenedByFailure)
     }
 
-    @Test("AC-50: a falha tolerada após a retomada encerra o ciclo sem ampliar a cadência")
+    @Test("a falha tolerada após a retomada encerra o ciclo sem ampliar a cadência")
     func aToleratedFailureEndsTheCycleWithoutWidening() {
         var planner = Self.plannerHoldingItsFirstReading()
         let late = Self.second(400)
@@ -115,7 +115,7 @@ struct CycleDeadlineTests {
         #expect(planner.cadence.interval == ProbePlanner.baseInterval)
     }
 
-    @Test("AC-51: a retomada de suspensão encerra a condição e devolve o ritmo base")
+    @Test("a retomada de suspensão encerra a condição e devolve o ritmo base")
     func wakingEndsTheCycle() {
         var planner = Self.plannerHoldingItsFirstReading()
         let wake = Self.second(8 * 3_600)
@@ -127,7 +127,7 @@ struct CycleDeadlineTests {
         #expect(planner.cadence.nature == .base)
     }
 
-    @Test("AC-52: depois de acordar, o atraso volta a valer contado da âncora nova")
+    @Test("depois de acordar, o atraso volta a valer contado da âncora nova")
     func deferralHoldsAgainAfterWaking() {
         var planner = Self.plannerHoldingItsFirstReading()
         let wake = Self.second(8 * 3_600)
@@ -137,7 +137,7 @@ struct CycleDeadlineTests {
         #expect(Self.isDeferred(planner, at: wake.addingTimeInterval(300)))
     }
 
-    @Test("§9.4: a pendência de Claude Code inicia ciclo, e a recuperação não nasce declarando adiamento")
+    @Test("a pendência de Claude Code inicia ciclo, e a recuperação não nasce declarando adiamento")
     func aPendencyStartsACycleSoRecoveryIsNeverBornDeferred() {
         var planner = Self.plannerHoldingItsFirstReading()
 
@@ -151,7 +151,7 @@ struct CycleDeadlineTests {
         #expect(Self.isDeferred(planner, at: Self.second(60 * 60)) == false)
     }
 
-    @Test("§9.5: o prazo do ciclo é sempre posterior ao instante agendado")
+    @Test("o prazo do ciclo é sempre posterior ao instante agendado")
     func theDeadlineIsAlwaysLaterThanTheScheduledInstant() {
         var planner = ProbePlanner(startingAt: Self.start)
         var elapsed = 0
@@ -174,7 +174,7 @@ struct CycleDeadlineTests {
         #expect(violations.isEmpty, "o prazo não superou o instante agendado nos passos \(violations)")
     }
 
-    @Test("§9.5: o prazo do ciclo nunca aumenta enquanto o ciclo é o mesmo")
+    @Test("o prazo do ciclo nunca aumenta enquanto o ciclo é o mesmo")
     func theDeadlineNeverGrowsWithinACycle() {
         var planner = Self.plannerHoldingItsFirstReading()
         var deadlines = [planner.cycle.deferralDeadline]
@@ -189,7 +189,7 @@ struct CycleDeadlineTests {
         #expect(zip(deadlines, deadlines.dropFirst()).allSatisfy { $1 <= $0 })
     }
 
-    @Test("AC-58: dobrado o limiar na fonte única, o prazo do ciclo acompanha")
+    @Test("dobrado o limiar na fonte única, o prazo do ciclo acompanha")
     func theCycleDeadlineFollowsTheInjectedThreshold() {
         let doubled = DeferralPolicy(tolerance: DeferralPolicy.standard.tolerance * 2)
         var planner = ProbePlanner(startingAt: Self.start, policy: doubled)

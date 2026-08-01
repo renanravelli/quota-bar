@@ -33,7 +33,7 @@ struct BarSymbolFallbackTests {
 
     private static let sources: [QuotaSource?] = [nil, .primaryProbe, .contingencyStatusLine]
 
-    @Test("QB-APP-002 AC-2: a arte própria existe e carrega para as oito combinações de faixa e preenchimento")
+    @Test("a arte própria existe e carrega para as oito combinações de faixa e preenchimento")
     func customArtLoadsForEveryBandAndFill() {
         for percent in ["50", "80", "95", "100"] {
             for source in [QuotaSource.primaryProbe, .contingencyStatusLine] {
@@ -49,7 +49,7 @@ struct BarSymbolFallbackTests {
         }
     }
 
-    @Test("QB-APP-002 AC-32: com a arte indisponível no bundle, nenhum símbolo customizado é carregado")
+    @Test("com a arte indisponível no bundle, nenhum símbolo customizado é carregado")
     func customArtIsAbsentInABundleWithoutIt() {
         for state in Self.states {
             for source in Self.sources {
@@ -59,7 +59,7 @@ struct BarSymbolFallbackTests {
         }
     }
 
-    @Test("QB-APP-002 AC-32: o símbolo de reserva existe e é carregável em todos os estados")
+    @Test("o símbolo de reserva existe e é carregável em todos os estados")
     func fallbackSymbolAlwaysResolves() {
         for state in Self.states {
             for source in Self.sources {
@@ -72,7 +72,7 @@ struct BarSymbolFallbackTests {
         }
     }
 
-    @Test("QB-APP-002 AC-32: o item nunca fica sem símbolo — customizado ou reserva, sempre há um")
+    @Test("o item nunca fica sem símbolo — customizado ou reserva, sempre há um")
     func thereIsAlwaysASymbolToDraw() {
         for state in Self.states {
             for source in Self.sources {
@@ -88,7 +88,7 @@ struct BarSymbolFallbackTests {
         }
     }
 
-    @Test("QB-APP-002 AC-4 e QB-APP-002 AC-7: o nome do recurso customizado codifica faixa e preenchimento")
+    @Test("o nome do recurso customizado codifica faixa e preenchimento")
     func customNameEncodesBandAndFill() {
         let primary = SymbolResolver.appearance(
             for: .ready(value("80")), source: .primaryProbe, inEpisode: false
@@ -102,7 +102,7 @@ struct BarSymbolFallbackTests {
         #expect(BarSymbolAsset.customName(for: primary) != BarSymbolAsset.customName(for: contingency))
     }
 
-    @Test("QB-APP-002 AC-4: os estados sem forma não pedem recurso customizado")
+    @Test("os estados sem forma não pedem recurso customizado")
     func statesWithoutShapeAskForNoCustomResource() {
         for state in [IndicatorState.notConfigured, .loading, .failed(.blockedByPolicy)] {
             let appearance = SymbolResolver.appearance(for: state, source: .primaryProbe, inEpisode: false)
@@ -110,7 +110,7 @@ struct BarSymbolFallbackTests {
         }
     }
 
-    @Test("QB-APP-002 AC-6: as oito combinações de faixa e preenchimento pedem oito recursos distintos")
+    @Test("as oito combinações de faixa e preenchimento pedem oito recursos distintos")
     func eightDistinctCustomResources() {
         var names: Set<String> = []
 

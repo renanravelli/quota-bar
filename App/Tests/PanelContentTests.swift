@@ -81,7 +81,7 @@ private enum Fixture {
 
 @Suite("Painel")
 struct PanelContentTests {
-    @Test("QB-APP-001 AC-18: o painel detalha as duas janelas, nomeadas por extenso, com reset e idade")
+    @Test("o painel detalha as duas janelas, nomeadas por extenso, com reset e idade")
     func detailsBothWindows() {
         let reset = Fixture.readAt.addingTimeInterval(3_600)
         let content = Fixture.panel(
@@ -98,7 +98,7 @@ struct PanelContentTests {
         #expect(content.situation.contains("há 3 minutos"))
     }
 
-    @Test("QB-APP-001 AC-19: o painel declara qual janela está na barra e que a origem a informou")
+    @Test("o painel declara qual janela está na barra e que a origem a informou")
     func declaresSelectionFromOrigin() throws {
         let content = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(fiveHour: "20", sevenDay: "92", binding: .window(.sevenDay)))
@@ -109,7 +109,7 @@ struct PanelContentTests {
         #expect(selection.contains("origem"))
     }
 
-    @Test("QB-APP-001 AC-31: quando o app escolhe, o painel declara que a escolha foi dele e por quê")
+    @Test("quando o app escolhe, o painel declara que a escolha foi dele e por quê")
     func declaresAppChoice() throws {
         let content = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(fiveHour: "31", sevenDay: "67", binding: nil))
@@ -120,7 +120,7 @@ struct PanelContentTests {
         #expect(selection.contains("não informou"))
     }
 
-    @Test("QB-APP-001 AC-20: a ação de encerrar está presente em todos os seis estados")
+    @Test("a ação de encerrar está presente em todos os seis estados")
     func quitIsAlwaysPresent() {
         let value = Fixture.snapshot(fiveHour: "50", sevenDay: nil, binding: .window(.fiveHour))
         let states: [QuotaState] = [
@@ -137,7 +137,7 @@ struct PanelContentTests {
         #expect(!Fixture.panel(Fixture.state(snapshot: value), afterSeconds: 11 * 60).quitTitle.isEmpty)
     }
 
-    @Test("QB-APP-001 AC-46: nos estados sem valor o painel abre e declara a ausência, sem zero nem traço")
+    @Test("nos estados sem valor o painel abre e declara a ausência, sem zero nem traço")
     func panelWorksWithoutValue() {
         let notConfigured = Fixture.panel(
             Fixture.state(snapshot: nil, credentialPresent: false, lastAttempt: .inProgress)
@@ -158,7 +158,7 @@ struct PanelContentTests {
         #expect(loading.situation == "Primeira leitura em andamento.")
     }
 
-    @Test("QB-APP-001 AC-42: reset não fornecido é declarado ausente, nunca preenchido")
+    @Test("reset não fornecido é declarado ausente, nunca preenchido")
     func missingResetIsDeclared() {
         let content = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(
@@ -172,7 +172,7 @@ struct PanelContentTests {
         #expect(content.fiveHour.reset != nil)
     }
 
-    @Test("QB-APP-001 AC-47 e QB-APP-001 AC-43: os sete motivos de falha têm textos distintos entre si")
+    @Test("os sete motivos de falha têm textos distintos entre si")
     func failureReasonsHaveDistinctTexts() {
         let texts = FailureReason.allCases.map { PanelText.reason($0) }
 
@@ -182,7 +182,7 @@ struct PanelContentTests {
         #expect(PanelText.reason(.blockedByPolicy).contains("Não é defeito do token nem da conta"))
     }
 
-    @Test("QB-APP-001 AC-49: Claude Code não encontrado tem motivo próprio e manda instalá-lo, sem falar em credencial")
+    @Test("Claude Code não encontrado tem motivo próprio e manda instalá-lo, sem falar em credencial")
     func claudeCodeNotFoundHasItsOwnReason() {
         let content = Fixture.panel(
             Fixture.state(snapshot: nil, claudeCodeMissing: true, lastAttempt: .failed(.claudeCodeNotFound))
@@ -196,7 +196,7 @@ struct PanelContentTests {
         #expect(!text.lowercased().contains("token"))
     }
 
-    @Test("QB-APP-001 AC-49: com a credencial configurada, só a pendência do Claude Code é declarada")
+    @Test("com a credencial configurada, só a pendência do Claude Code é declarada")
     func claudeCodePendencyDoesNotDragTheCredentialAlong() {
         let content = Fixture.panel(
             Fixture.state(snapshot: nil, claudeCodeMissing: true, lastAttempt: .failed(.claudeCodeNotFound))
@@ -212,7 +212,7 @@ struct PanelContentTests {
         }
     }
 
-    @Test("QB-APP-001 AC-50: com pendência de credencial o painel oferece configurar, e só ela além de encerrar")
+    @Test("com pendência de credencial o painel oferece configurar, e só ela além de encerrar")
     func configureActionExistsWhenCredentialIsPending() {
         let pending = Fixture.panel(
             Fixture.state(snapshot: nil, credentialPresent: false, lastAttempt: .inProgress)
@@ -223,7 +223,7 @@ struct PanelContentTests {
         #expect(pending.actionTitles.count == 2)
     }
 
-    @Test("QB-APP-001 AC-50: sem pendência de credencial a única ação é encerrar")
+    @Test("sem pendência de credencial a única ação é encerrar")
     func configureActionIsAbsentWithoutPendency() {
         let configured = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(fiveHour: "42", sevenDay: nil, binding: .window(.fiveHour)))
@@ -233,7 +233,7 @@ struct PanelContentTests {
         #expect(configured.actionTitles == [PanelText.quit])
     }
 
-    @Test("QB-APP-001 AC-51: as duas pendências são declaradas na mesma abertura")
+    @Test("as duas pendências são declaradas na mesma abertura")
     func bothPendenciesAreDeclaredAtOnce() {
         let state = Fixture.state(
             snapshot: nil,
@@ -252,7 +252,7 @@ struct PanelContentTests {
         #expect(content.configureCredentialTitle == PanelText.configureCredential)
     }
 
-    @Test("QB-APP-001 AC-51: resolvida uma pendência, a outra continua declarada sozinha")
+    @Test("resolvida uma pendência, a outra continua declarada sozinha")
     func eachPendencyIsDeclaredOnItsOwn() {
         let onlyClaudeCode = Fixture.panel(
             Fixture.state(
@@ -275,7 +275,7 @@ struct PanelContentTests {
         #expect(none.pendencies.isEmpty)
     }
 
-    @Test("QB-APP-001 AC-43: bloqueio por política aparece na situação e nenhum percentual antigo é exibido")
+    @Test("bloqueio por política aparece na situação e nenhum percentual antigo é exibido")
     func blockedByPolicyShowsOwnReason() {
         let content = Fixture.panel(
             Fixture.state(snapshot: nil, lastAttempt: .failed(.blockedByPolicy))
@@ -286,7 +286,7 @@ struct PanelContentTests {
         #expect(content.sevenDay.utilization == nil)
     }
 
-    @Test("QB-APP-001 AC-35 e QB-APP-001 AC-37: a linha de cadência traz intervalo e natureza")
+    @Test("a linha de cadência traz intervalo e natureza")
     func cadenceLineCarriesIntervalAndNature() {
         let idle = Fixture.panel(
             Fixture.state(
@@ -310,7 +310,7 @@ struct PanelContentTests {
         #expect(widened.cadenceLine == "Atualizando a cada 30 minutos — ampliado por falha.")
     }
 
-    @Test("QB-APP-001 AC-36: a cadência voltar ao ritmo base não muda o estado do indicador")
+    @Test("a cadência voltar ao ritmo base não muda o estado do indicador")
     func returningToBaseCadenceDoesNotChangeState() {
         let snapshot = Fixture.snapshot(fiveHour: "30", sevenDay: nil, binding: .window(.fiveHour))
         let now = Fixture.readAt.addingTimeInterval(28 * 60)
@@ -333,7 +333,7 @@ struct PanelContentTests {
         }
     }
 
-    @Test("QB-APP-001 AC-40: a mudança de fonte é anunciada e a contingência lista o que não entrega")
+    @Test("a mudança de fonte é anunciada e a contingência lista o que não entrega")
     func sourceChangeIsAnnounced() {
         let content = Fixture.panel(
             Fixture.state(
@@ -351,7 +351,7 @@ struct PanelContentTests {
         #expect(content.contingencyLosses.contains { $0.contains("janela limita") })
     }
 
-    @Test("QB-APP-001 AC-40: sem mudança de fonte não há aviso")
+    @Test("sem mudança de fonte não há aviso")
     func noNoticeWithoutSourceChange() {
         let content = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(fiveHour: "30", sevenDay: nil, binding: .window(.fiveHour))),
@@ -362,7 +362,7 @@ struct PanelContentTests {
         #expect(content.contingencyLosses.isEmpty)
     }
 
-    @Test("QB-APP-001 AC-41: em contingência a seleção usa a regra de contorno e declara isso")
+    @Test("em contingência a seleção usa a regra de contorno e declara isso")
     func contingencyUsesFallbackSelection() throws {
         let content = Fixture.panel(
             Fixture.state(
@@ -378,7 +378,7 @@ struct PanelContentTests {
         #expect(selection.contains("não informou"))
     }
 
-    @Test("QB-APP-001 AC-48: em contingência sem credencial o painel declara que não há retorno à fonte primária")
+    @Test("em contingência sem credencial o painel declara que não há retorno à fonte primária")
     func contingencyWithoutCredentialDeclaresNoReturn() {
         let content = Fixture.panel(
             Fixture.state(
@@ -394,7 +394,7 @@ struct PanelContentTests {
         #expect(content.fiveHour.utilization == "33%")
     }
 
-    @Test("QB-APP-001 AC-23: idade de leitura no futuro nunca é exibida como tempo negativo")
+    @Test("idade de leitura no futuro nunca é exibida como tempo negativo")
     func futureReadingShowsNoNegativeAge() {
         let content = Fixture.panel(
             Fixture.state(snapshot: Fixture.snapshot(fiveHour: "30", sevenDay: nil, binding: .window(.fiveHour))),

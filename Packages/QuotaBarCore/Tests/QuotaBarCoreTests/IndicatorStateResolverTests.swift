@@ -44,7 +44,7 @@ struct IndicatorStateResolverTests {
         return resolve(state, afterSeconds: seconds, latch: &latch)
     }
 
-    @Test("AC-5: sem credencial, valor de fonte primária não sustenta o indicador")
+    @Test("sem credencial, valor de fonte primária não sustenta o indicador")
     func missingCredentialWinsOverPrimarySourceValue() {
         let state = TestState.make(
             credentialPresent: false,
@@ -56,7 +56,7 @@ struct IndicatorStateResolverTests {
         #expect(Self.resolve(state) == .notConfigured)
     }
 
-    @Test("AC-48: sem credencial, valor de contingência é preservado")
+    @Test("sem credencial, valor de contingência é preservado")
     func contingencyValueSurvivesCredentialRemoval() {
         let snapshot = TestSnapshot.make(
             fiveHourPercent: "33",
@@ -80,14 +80,14 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 33)
     }
 
-    @Test("AC-7: primeiro uso, sem credencial e sem leitura")
+    @Test("primeiro uso, sem credencial e sem leitura")
     func firstRunWithoutCredential() {
         let state = TestState.make(credentialPresent: false, snapshot: nil, lastAttempt: .inProgress)
 
         #expect(Self.resolve(state) == .notConfigured)
     }
 
-    @Test("AC-8: primeira leitura em andamento")
+    @Test("primeira leitura em andamento")
     func firstReadingInProgress() {
         let state = TestState.make(credentialPresent: true, snapshot: nil, lastAttempt: .inProgress)
 
@@ -95,7 +95,7 @@ struct IndicatorStateResolverTests {
     }
 
     @Test(
-        "AC-9: falha sem valor exibível carrega o motivo, distinto para cada condição",
+        "falha sem valor exibível carrega o motivo, distinto para cada condição",
         arguments: FailureReason.allCases
     )
     func failureWithoutDisplayableValueCarriesReason(reason: FailureReason) {
@@ -104,7 +104,7 @@ struct IndicatorStateResolverTests {
         #expect(Self.resolve(state) == .failed(reason))
     }
 
-    @Test("AC-6: falha com valor exibível e idade acima do limite resulta em obsoleto, não em falha")
+    @Test("falha com valor exibível e idade acima do limite resulta em obsoleto, não em falha")
     func failureWithDisplayableValueBecomesStale() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "42", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -120,7 +120,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 42)
     }
 
-    @Test("AC-6: falha recente com valor exibível dentro do limite não marca obsolescência")
+    @Test("falha recente com valor exibível dentro do limite não marca obsolescência")
     func recentFailureKeepsValueReady() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "42", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -135,7 +135,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 42)
     }
 
-    @Test("AC-13: idade acima do limite torna o dado obsoleto")
+    @Test("idade acima do limite torna o dado obsoleto")
     func ageBeyondLimitBecomesStale() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "30", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -151,7 +151,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 30)
     }
 
-    @Test("AC-13: dentro do limite o dado permanece pronto")
+    @Test("dentro do limite o dado permanece pronto")
     func ageWithinLimitStaysReady() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "30", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -161,7 +161,7 @@ struct IndicatorStateResolverTests {
         #expect(Self.resolve(state, afterSeconds: 9 * 60).isReady)
     }
 
-    @Test("AC-35: com ociosidade no teto, doze minutos de idade continuam prontos")
+    @Test("com ociosidade no teto, doze minutos de idade continuam prontos")
     func idleCeilingKeepsTwelveMinuteReadingReady() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "30", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -172,7 +172,7 @@ struct IndicatorStateResolverTests {
         #expect(Self.resolve(state, afterSeconds: 12 * 60).isReady)
     }
 
-    @Test("AC-14: reset da janela exibida ultrapassado torna o dado obsoleto")
+    @Test("reset da janela exibida ultrapassado torna o dado obsoleto")
     func passedResetBecomesStale() {
         let snapshot = TestSnapshot.make(
             fiveHourPercent: "30",
@@ -190,7 +190,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 30)
     }
 
-    @Test("AC-15: consumo de 100% leva a esgotado")
+    @Test("consumo de 100% leva a esgotado")
     func oneHundredPercentBecomesExhausted() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "100", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -206,7 +206,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.truncatedPercent == 100)
     }
 
-    @Test("AC-16: consumo acima de 100% é esgotado, não resposta inesperada")
+    @Test("consumo acima de 100% é esgotado, não resposta inesperada")
     func overageBecomesExhausted() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "118", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -221,7 +221,7 @@ struct IndicatorStateResolverTests {
         #expect(value.utilization.basisPoints == 11_800)
     }
 
-    @Test("AC-17: cota esgotada reportada com os percentuais é leitura, não falha")
+    @Test("cota esgotada reportada com os percentuais é leitura, não falha")
     func reportedExhaustionIsAReading() throws {
         let snapshot = try #require(QuotaSnapshot(
             fiveHour: WindowReading(
@@ -252,7 +252,7 @@ struct IndicatorStateResolverTests {
         ))
     }
 
-    @Test("AC-13 e AC-15: obsoleto e esgotado ao mesmo tempo resolve como obsoleto")
+    @Test("obsoleto e esgotado ao mesmo tempo resolve como obsoleto")
     func stalenessTakesPrecedenceOverExhaustion() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "100", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -267,7 +267,7 @@ struct IndicatorStateResolverTests {
         #expect(value.band == .exhausted)
     }
 
-    @Test("AC-29: a faixa é calculada sobre a janela exibida")
+    @Test("a faixa é calculada sobre a janela exibida")
     func bandFollowsDisplayedWindow() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "20", sevenDayPercent: "92", bindingWindow: .window(.sevenDay)),
@@ -284,7 +284,7 @@ struct IndicatorStateResolverTests {
         #expect(value.band == .critical)
     }
 
-    @Test("AC-23: leitura no futuro é tratada como idade zero")
+    @Test("leitura no futuro é tratada como idade zero")
     func readingInTheFutureIsTreatedAsAgeZero() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "30", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -294,7 +294,7 @@ struct IndicatorStateResolverTests {
         #expect(Self.resolve(state, afterSeconds: -3_600).isReady)
     }
 
-    @Test("AC-44: a trava atravessa chamadas do resolvedor")
+    @Test("a trava atravessa chamadas do resolvedor")
     func latchSurvivesAcrossResolutions() {
         let state = TestState.make(
             snapshot: TestSnapshot.make(fiveHourPercent: "30", sevenDayPercent: nil, bindingWindow: .window(.fiveHour)),
@@ -309,13 +309,13 @@ struct IndicatorStateResolverTests {
         #expect(backWithinLimit.isStale)
     }
 
-    @Test("AC-9: leitura sem nenhum percentual é recusada na construção, não exibida com zeros")
+    @Test("leitura sem nenhum percentual é recusada na construção, não exibida com zeros")
     func readingWithoutAnyUtilizationIsRefusedAtConstruction() {
         #expect(TestSnapshot.build(fiveHourPercent: nil, sevenDayPercent: nil, bindingWindow: nil) == nil)
         #expect(TestSnapshot.build(fiveHourPercent: nil, sevenDayPercent: nil, bindingWindow: .window(.fiveHour)) == nil)
     }
 
-    @Test("AC-9: leitura válida exige ao menos uma janela com percentual")
+    @Test("leitura válida exige ao menos uma janela com percentual")
     func aValidReadingNeedsAtLeastOneWindow() {
         #expect(TestSnapshot.build(fiveHourPercent: "0", sevenDayPercent: nil, bindingWindow: nil) != nil)
         #expect(TestSnapshot.build(fiveHourPercent: nil, sevenDayPercent: "0", bindingWindow: nil) != nil)

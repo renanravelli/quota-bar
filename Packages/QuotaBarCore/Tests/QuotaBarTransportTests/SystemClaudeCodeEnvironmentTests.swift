@@ -34,7 +34,7 @@ struct SystemClaudeCodeEnvironmentTests {
         return launcher
     }
 
-    @Test("AC-1: o executável instalado é localizado e a versão vem de --version")
+    @Test("o executável instalado é localizado e a versão vem de --version")
     func theInstalledExecutableReportsItsVersion() throws {
         let home = try Self.makeHome()
         defer { try? FileManager.default.removeItem(at: home) }
@@ -45,7 +45,7 @@ struct SystemClaudeCodeEnvironmentTests {
         #expect(resolver.resolve().version == "2.1.220")
     }
 
-    @Test("AC-3: sem Claude Code instalado, a descoberta devolve não encontrado")
+    @Test("sem Claude Code instalado, a descoberta devolve não encontrado")
     func withoutAnInstallationNothingIsDiscovered() throws {
         let home = try Self.makeHome()
         defer { try? FileManager.default.removeItem(at: home) }
@@ -57,7 +57,7 @@ struct SystemClaudeCodeEnvironmentTests {
         #expect(!discovery.allowsProbe)
     }
 
-    @Test("AC-2: o cache é revalidado pelo alvo do symlink, não pelo link")
+    @Test("o cache é revalidado pelo alvo do symlink, não pelo link")
     func theCacheIsKeyedOnTheResolvedTarget() throws {
         let home = try Self.makeHome()
         defer { try? FileManager.default.removeItem(at: home) }

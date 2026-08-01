@@ -59,7 +59,7 @@ private enum Relaunch {
 
 @Suite("Restauração do último estado de cota no lançamento")
 struct SnapshotRestorationTests {
-    @Test("AC-29: o estado sobrevive ao fechamento e volta com o instante original da leitura")
+    @Test("o estado sobrevive ao fechamento e volta com o instante original da leitura")
     func theLastReadingSurvivesTheRelaunch() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -73,7 +73,7 @@ struct SnapshotRestorationTests {
         #expect(restored.credentialPresent)
     }
 
-    @Test("AC-41: o estado restaurado, antes do primeiro ciclo, não afirma condição alguma")
+    @Test("o estado restaurado, antes do primeiro ciclo, não afirma condição alguma")
     func theRestoredStateHasNoCycleYet() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -89,7 +89,7 @@ struct SnapshotRestorationTests {
         #expect(restored.cadence(at: ProviderHarness.start, latch: &latch) == nil)
     }
 
-    @Test("AC-29: a leitura bem-sucedida é gravada com a sequência e o instante que teve")
+    @Test("a leitura bem-sucedida é gravada com a sequência e o instante que teve")
     func everySuccessfulReadingIsPersisted() async throws {
         let store = InMemorySnapshotStore()
         let harness = ProviderHarness(responses: [CannedResponse.reading()], store: store)
@@ -101,7 +101,7 @@ struct SnapshotRestorationTests {
         #expect(persisted.readSequence == 1)
     }
 
-    @Test("AC-30: relançamento com três minutos de idade não degrada o dado")
+    @Test("relançamento com três minutos de idade não degrada o dado")
     func aThreeMinuteOldReadingIsRestoredAsFresh() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -118,7 +118,7 @@ struct SnapshotRestorationTests {
         }
     }
 
-    @Test("AC-31: relançamento com onze minutos de idade marca o dado, sem supor ociosidade")
+    @Test("relançamento com onze minutos de idade marca o dado, sem supor ociosidade")
     func anElevenMinuteOldReadingIsRestoredAsStale() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -135,7 +135,7 @@ struct SnapshotRestorationTests {
         }
     }
 
-    @Test("AC-32: sem estado restaurável o aplicativo começa vazio e segue operando")
+    @Test("sem estado restaurável o aplicativo começa vazio e segue operando")
     func nothingRestorableStillLaunches() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -150,7 +150,7 @@ struct SnapshotRestorationTests {
         #expect(harness.latest?.snapshot?.readSequence == 1)
     }
 
-    @Test("AC-32: arquivo corrompido não derruba o lançamento nem vira leitura com zeros")
+    @Test("arquivo corrompido não derruba o lançamento nem vira leitura com zeros")
     func aCorruptedFileDoesNotBreakTheLaunch() async throws {
         let temporary = TemporaryStore()
         temporary.write(Data("{ \"version\": 1, \"fiveHour\":".utf8))
@@ -161,7 +161,7 @@ struct SnapshotRestorationTests {
         #expect(harness.published.first?.snapshot == nil)
     }
 
-    @Test("AC-32: sequência no extremo do domínio, vinda do arquivo, não derruba as leituras seguintes")
+    @Test("sequência no extremo do domínio, vinda do arquivo, não derruba as leituras seguintes")
     func anExtremeStoredSequenceDoesNotBreakTheFollowingReadings() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -180,7 +180,7 @@ struct SnapshotRestorationTests {
         #expect(second != first)
     }
 
-    @Test("contratos §6: a sequência atravessa o relançamento e a primeira leitura nova destrava")
+    @Test("a sequência atravessa o relançamento e a primeira leitura nova destrava")
     func theReadSequenceCrossesTheRelaunch() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -214,7 +214,7 @@ struct SnapshotRestorationTests {
         #expect(!latchedOnFreshReading)
     }
 
-    @Test("AC-41 e contratos §9.9: o ciclo não sobrevive ao fechamento, e o lançamento não nasce declarando adiamento")
+    @Test("o ciclo não sobrevive ao fechamento, e o lançamento não nasce declarando adiamento")
     func theCycleDoesNotSurviveTheRelaunch() async throws {
         let temporary = TemporaryStore()
         let closed = Relaunch.lastSession(endedAgo: 6 * 3_600)
@@ -238,7 +238,7 @@ struct SnapshotRestorationTests {
         #expect(declared?.nature == .deferredBySystem)
     }
 
-    @Test("AC-33: o arquivo gravado não contém a credencial, derivado dela, nem corpo de erro")
+    @Test("o arquivo gravado não contém a credencial, derivado dela, nem corpo de erro")
     func thePersistedFileCarriesNoCredential() async throws {
         let temporary = TemporaryStore()
         let harness = ProviderHarness(

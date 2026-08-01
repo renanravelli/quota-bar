@@ -33,7 +33,7 @@ struct DeferralLatchTests {
         return planner
     }
 
-    @Test("AC-43 e AC-20: a condição passa a em atraso pela passagem do tempo, sem observador durante a espera")
+    @Test("a condição passa a em atraso pela passagem do tempo, sem observador durante a espera")
     func timeAloneMovesTheConditionWithoutAnyObserver() {
         let published = Self.state(of: Self.plannerHoldingItsReading())
 
@@ -46,7 +46,7 @@ struct DeferralLatchTests {
         #expect(published.cadence(at: Self.second(300), latch: &byLateOpening)?.nature == .deferredBySystem)
     }
 
-    @Test("AC-44 e AC-20: quatro minutos continuam abaixo do prazo e a condição não muda")
+    @Test("quatro minutos continuam abaixo do prazo e a condição não muda")
     func belowTheDeadlineTheConditionDoesNotMove() {
         let published = Self.state(of: Self.plannerHoldingItsReading())
         var latch = DeferralLatch()
@@ -54,7 +54,7 @@ struct DeferralLatchTests {
         #expect(published.cadence(at: Self.second(240), latch: &latch)?.nature == .base)
     }
 
-    @Test("AC-46 e AC-13: a natureza acompanha a condição, e as quatro são distinguíveis")
+    @Test("a natureza acompanha a condição, e as quatro são distinguíveis")
     func theNatureFollowsTheConditionAndTheFourAreDistinguishable() {
         var planner = ProbePlanner(startingAt: Self.start)
         var natures: [Cadence.Nature] = []
@@ -75,7 +75,7 @@ struct DeferralLatchTests {
         #expect(Set(natures).count == 4)
     }
 
-    @Test("AC-47: três horas de atraso não escalam nem mudam qualquer outro campo do estado")
+    @Test("três horas de atraso não escalam nem mudam qualquer outro campo do estado")
     func aVeryLongDeferralNeitherEscalatesNorChangesAnythingElse() {
         let published = Self.state(of: Self.plannerHoldingItsReading())
         var latch = DeferralLatch()
@@ -89,7 +89,7 @@ struct DeferralLatchTests {
         #expect(published.maxIdleCadenceSinceReading == ProbePlanner.baseInterval)
     }
 
-    @Test("AC-59: relógio recuado não desfaz a condição")
+    @Test("relógio recuado não desfaz a condição")
     func aRewoundClockNeverUndoesTheCondition() {
         let published = Self.state(of: Self.plannerHoldingItsReading())
         var latch = DeferralLatch()
@@ -99,7 +99,7 @@ struct DeferralLatchTests {
         #expect(published.cadence(at: Self.second(1), latch: &latch)?.nature == .deferredBySystem)
     }
 
-    @Test("AC-60: relógio adiantado antecipa a condição, e o ciclo seguinte a desfaz")
+    @Test("relógio adiantado antecipa a condição, e o ciclo seguinte a desfaz")
     func aFastForwardedClockAnticipatesTheConditionAndTheNextCycleUndoesIt() {
         var planner = Self.plannerHoldingItsReading()
         var latch = DeferralLatch()
@@ -112,7 +112,7 @@ struct DeferralLatchTests {
         #expect(Self.state(of: planner).cadence(at: Self.second(660), latch: &latch)?.nature == .base)
     }
 
-    @Test("AC-61: suspensão não observada aparece como atraso e se desfaz no ciclo seguinte")
+    @Test("suspensão não observada aparece como atraso e se desfaz no ciclo seguinte")
     func anUnobservedSuspensionUndoesItselfOnTheNextCycle() {
         var planner = Self.plannerHoldingItsReading()
         var latch = DeferralLatch()
@@ -125,7 +125,7 @@ struct DeferralLatchTests {
         #expect(Self.state(of: planner).cadence(at: wake, latch: &latch)?.nature == .idle)
     }
 
-    @Test("AC-62: a condição nunca fica presa depois de uma leitura bem-sucedida")
+    @Test("a condição nunca fica presa depois de uma leitura bem-sucedida")
     func theConditionIsNeverStuck() {
         var planner = Self.plannerHoldingItsReading()
         var latch = DeferralLatch()
@@ -140,7 +140,7 @@ struct DeferralLatchTests {
         }
     }
 
-    @Test("AC-63: o primeiro ciclo do primeiro uso não nasce em atraso")
+    @Test("o primeiro ciclo do primeiro uso não nasce em atraso")
     func theVeryFirstCycleIsNeverBornDeferred() {
         let planner = ProbePlanner(startingAt: Self.start)
         var latch = DeferralLatch()
@@ -149,14 +149,14 @@ struct DeferralLatchTests {
         #expect(Self.state(of: planner).cadence(at: Self.second(1), latch: &latch)?.nature == .base)
     }
 
-    @Test("AC-41: sem ciclo agendado a condição é inexistente, e não não em atraso")
+    @Test("sem ciclo agendado a condição é inexistente, e não não em atraso")
     func withoutACycleTheConditionIsAbsent() {
         var latch = DeferralLatch()
 
         #expect(QuotaState.unconfigured.cadence(at: Self.start, latch: &latch) == nil)
     }
 
-    @Test("AC-58: dobrado o limiar na fonte única, natureza e condição acompanham juntas")
+    @Test("dobrado o limiar na fonte única, natureza e condição acompanham juntas")
     func theNatureAndTheConditionFollowTheInjectedThreshold() {
         var doubled = ProbePlanner(
             startingAt: Self.start,

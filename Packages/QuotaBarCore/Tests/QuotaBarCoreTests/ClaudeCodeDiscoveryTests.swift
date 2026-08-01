@@ -60,7 +60,7 @@ struct ClaudeCodeDiscoveryTests {
         )
     }
 
-    @Test("AC-1: a versão é apurada uma vez e reaproveitada nas leituras seguintes")
+    @Test("a versão é apurada uma vez e reaproveitada nas leituras seguintes")
     func versionIsResolvedOnceAndReused() {
         let environment = StubClaudeCodeEnvironment()
         environment.install(Self.executable(), at: Self.nativeInstaller, reporting: "2.1.220 (Claude Code)")
@@ -72,7 +72,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(environment.versionReads.count == 1)
     }
 
-    @Test("AC-2: executável substituído reapura a versão sem reiniciar o aplicativo")
+    @Test("executável substituído reapura a versão sem reiniciar o aplicativo")
     func replacedExecutableIsReRead() {
         let environment = StubClaudeCodeEnvironment()
         environment.install(
@@ -95,7 +95,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(environment.versionReads.count == 2)
     }
 
-    @Test("AC-3: sem Claude Code instalado não há versão nem leitura")
+    @Test("sem Claude Code instalado não há versão nem leitura")
     func absentClaudeCodeBlocksProbing() {
         let environment = StubClaudeCodeEnvironment()
         var resolver = ClaudeCodeVersionResolver(environment: environment)
@@ -108,7 +108,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(environment.versionReads.isEmpty)
     }
 
-    @Test("AC-3: a busca percorre a lista fechada do ADR-006 e não consulta o PATH")
+    @Test("a busca percorre a lista fechada de caminhos candidatos e não consulta o PATH")
     func searchFollowsTheClosedList() {
         let environment = StubClaudeCodeEnvironment()
         var resolver = ClaudeCodeVersionResolver(environment: environment)
@@ -125,7 +125,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(environment.lookups == ClaudeCodeCandidatePath.ordered)
     }
 
-    @Test("AC-3: o primeiro caminho da lista vence e a busca para nele")
+    @Test("o primeiro caminho da lista vence e a busca para nele")
     func firstCandidateWins() {
         let environment = StubClaudeCodeEnvironment()
         environment.install(
@@ -146,7 +146,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(environment.lookups == [Self.nativeInstaller])
     }
 
-    @Test("AC-3: saída irreconhecível não vira versão suposta")
+    @Test("saída irreconhecível não vira versão suposta")
     func unreadableOutputNeverBecomesAssumedVersion() {
         let environment = StubClaudeCodeEnvironment()
         environment.install(Self.executable(), at: Self.nativeInstaller, reporting: "unknown")
@@ -158,7 +158,7 @@ struct ClaudeCodeDiscoveryTests {
         #expect(discovery.allowsProbe == false)
     }
 
-    @Test("AC-3: Claude Code desinstalado em execução cessa a descoberta")
+    @Test("Claude Code desinstalado em execução cessa a descoberta")
     func uninstalledDuringExecutionStopsDiscovery() {
         let environment = StubClaudeCodeEnvironment()
         environment.install(Self.executable(), at: Self.nativeInstaller, reporting: "2.1.220 (Claude Code)")
@@ -177,7 +177,7 @@ struct ClaudeCodeDiscoveryTests {
     }
 
     @Test(
-        "AC-3: só a versão realmente lida é aceita",
+        "só a versão realmente lida é aceita",
         arguments: [
             ("2.1.220 (Claude Code)", "2.1.220"),
             ("  1.0.98 (Claude Code)\n", "1.0.98"),

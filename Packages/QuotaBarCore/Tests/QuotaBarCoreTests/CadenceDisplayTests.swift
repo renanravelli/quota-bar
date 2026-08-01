@@ -32,7 +32,7 @@ private enum Display {
 
 @Suite("Apresentação da barra de cadência")
 struct CadenceDisplayTests {
-    @Test("QB-APP-002 REQ-11: dentro de um ciclo o preenchimento nunca recua")
+    @Test("dentro de um ciclo o preenchimento nunca recua")
     func theFillIsMonotonicWithinACycle() throws {
         let samples = try stride(from: 0.0, through: 360.0, by: 3.0)
             .map { try #require(Display.progress(after: $0)) }
@@ -41,7 +41,7 @@ struct CadenceDisplayTests {
         #expect(Set(samples).count > 1, "o preenchimento não se moveu no percurso")
     }
 
-    @Test("QB-APP-002 REQ-11: o preenchimento satura no instante previsto, não transborda e permanece cheio")
+    @Test("o preenchimento satura no instante previsto, não transborda e permanece cheio")
     func theFillSaturatesAtTheExpectedInstantAndStays() throws {
         #expect(try #require(Display.progress(after: 179)) < 1)
         #expect(Display.progress(after: 180) == 1)
@@ -51,13 +51,13 @@ struct CadenceDisplayTests {
         #expect(afterTheInstant.allSatisfy { $0 == 1 }, "o preenchimento transbordou, recomeçou ou apagou")
     }
 
-    @Test("QB-APP-002 REQ-11: o recorte é do tipo, e não de quem constrói o valor")
+    @Test("o recorte é do tipo, e não de quem constrói o valor")
     func theTypeClampsInsteadOfTrustingItsCaller() {
         #expect(CadenceDisplay(cadence: Display.cadence(), progress: 4).progress == 1)
         #expect(CadenceDisplay(cadence: Display.cadence(), progress: -3).progress == 0)
     }
 
-    @Test("QB-APP-002 REQ-11: nenhuma das quatro naturezas altera o preenchimento")
+    @Test("nenhuma das quatro naturezas altera o preenchimento")
     func theFillIsIndependentOfTheNature() throws {
         for elapsed in [0.0, 90.0, 180.0, 400.0] {
             let acrossNatures = try Display.fourNatures.map { try #require(Display.progress($0, after: elapsed)) }
@@ -65,7 +65,7 @@ struct CadenceDisplayTests {
         }
     }
 
-    @Test("QB-APP-002 REQ-11: um ciclo que começa agora nasce com preenchimento em zero")
+    @Test("um ciclo que começa agora nasce com preenchimento em zero")
     func aCycleThatStartsNowIsBornEmpty() {
         let startedNow = Display.cycleStart.addingTimeInterval(600)
 
@@ -75,7 +75,7 @@ struct CadenceDisplayTests {
         )
     }
 
-    @Test("ADR-010: a natureza tem um lugar só, e o reforço é derivado dela")
+    @Test("a natureza tem um lugar só, e o reforço é derivado dela")
     func theReinforcementIsDerivedFromTheOnlyNatureThereIs() {
         let displays = Display.fourNatures.map { CadenceDisplay(cadence: Display.cadence($0), progress: 0.5) }
 
@@ -85,7 +85,7 @@ struct CadenceDisplayTests {
         #expect(CadenceReinforcement(.base) == CadenceReinforcement.none)
     }
 
-    @Test("QB-APP-002 REQ-11: sem cadência ou sem instante previsto não há barra a exibir")
+    @Test("sem cadência ou sem instante previsto não há barra a exibir")
     func thereIsNoBarWithoutACadenceOrAnExpectedInstant() {
         #expect(
             CadenceDisplayPolicy.display(
@@ -99,7 +99,7 @@ struct CadenceDisplayTests {
         )
     }
 
-    @Test("QB-APP-002 REQ-18: o passo do preenchimento respeita o piso e o teto")
+    @Test("o passo do preenchimento respeita o piso e o teto")
     func theFillPaceStaysWithinItsBounds() {
         for seconds in [60, 120, 180, 300, 900, 3_600] {
             let interval = CadenceFillPolicy.refreshInterval(for: .seconds(seconds))

@@ -7,7 +7,7 @@ import Testing
 struct ProbeLifecycleTests {
     private static let wake = Date(timeIntervalSince1970: 1_700_000_000)
 
-    @Test("AC-16: a retomada da máquina devolve a cadência ao ritmo base")
+    @Test("a retomada da máquina devolve a cadência ao ritmo base")
     func wakeReturnsToBaseCadence() async {
         let harness = LifecycleHarness(at: Self.wake)
 
@@ -16,7 +16,7 @@ struct ProbeLifecycleTests {
         #expect(effect == .resumeAtBaseCadence(nextProbeAt: Self.wake, wokeAt: Self.wake))
     }
 
-    @Test("ADR-005: nenhuma sonda enquanto a máquina dorme")
+    @Test("nenhuma sonda enquanto a máquina dorme")
     func sleepSuspendsProbing() async {
         let harness = LifecycleHarness(at: Self.wake)
 
@@ -33,7 +33,7 @@ struct ProbeLifecycleTests {
         #expect(await harness.lifecycle.allowsProbing)
     }
 
-    @Test("ADR-005: com a máquina suspensa a sonda é recusada e nada é registrado por ela")
+    @Test("com a máquina suspensa a sonda é recusada e nada é registrado por ela")
     func aSuspendedMachineRefusesToProbe() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.deliver(.didWake)
@@ -49,7 +49,7 @@ struct ProbeLifecycleTests {
         #expect(await harness.lifecycle.retryAfterToleratedFailure() == retryBeforeTheRefusal)
     }
 
-    @Test("AC-18: a leitura de retomada respeita o piso desde a última leitura")
+    @Test("a leitura de retomada respeita o piso desde a última leitura")
     func wakeProbeHonoursTheFloorSinceTheLastReading() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.lifecycle.probing {}
@@ -65,7 +65,7 @@ struct ProbeLifecycleTests {
         )
     }
 
-    @Test("AC-16: acordar com leitura antiga lê assim que a máquina volta")
+    @Test("acordar com leitura antiga lê assim que a máquina volta")
     func wakeAfterALongSleepProbesImmediately() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.lifecycle.probing {}
@@ -77,7 +77,7 @@ struct ProbeLifecycleTests {
         #expect(effect == .resumeAtBaseCadence(nextProbeAt: harness.clock.now, wokeAt: harness.clock.now))
     }
 
-    @Test("AC-34: rede indisponível na janela após o acordar não amplia a cadência")
+    @Test("logo após o acordar o ciclo de vida ainda está na tolerância e mantém a cadência na falha de rede")
     func networkFailureRightAfterWakeKeepsTheCadence() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.deliver(.didWake)
@@ -89,7 +89,7 @@ struct ProbeLifecycleTests {
         #expect(await harness.lifecycle.reaction(to: .communicationFailure) == .keepCadence)
     }
 
-    @Test("AC-34: a tentativa seguinte acontece ainda dentro da janela do acordar")
+    @Test("a tentativa seguinte acontece ainda dentro da janela do acordar")
     func toleratedFailureRetriesInsideTheWindow() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.deliver(.didWake)
@@ -102,12 +102,12 @@ struct ProbeLifecycleTests {
         #expect(retry.map { $0 < Self.wake.addingTimeInterval(120) } == true)
     }
 
-    @Test("AC-34: a janela do acordar excede o piso, senão nenhuma tentativa caberia nela")
+    @Test("a janela do acordar excede o piso, senão nenhuma tentativa caberia nela")
     func theWakeWindowIsWiderThanTheProbeFloor() {
         #expect(ProbeLifecycle.wakeTolerance > Cadence.floor)
     }
 
-    @Test("AC-22: passada a janela do acordar, a falha de rede volta a ampliar a cadência")
+    @Test("passada a janela do acordar, a falha de rede volta a ampliar a cadência")
     func networkFailureOutsideTheWindowWidensAgain() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.deliver(.didWake)
@@ -120,7 +120,7 @@ struct ProbeLifecycleTests {
         #expect(await harness.lifecycle.retryAfterToleratedFailure() == nil)
     }
 
-    @Test("AC-28: a janela do acordar não tolera recusa de credencial")
+    @Test("a janela do acordar não tolera recusa de credencial")
     func theWakeWindowNeverToleratesCredentialRefusal() async {
         let harness = LifecycleHarness(at: Self.wake)
         _ = await harness.deliver(.didWake)
@@ -130,7 +130,7 @@ struct ProbeLifecycleTests {
         #expect(await harness.lifecycle.reaction(to: .blockedByPolicy) == .stopProbing)
     }
 
-    @Test("ADR-005: a atividade declarada tem escopo da sonda")
+    @Test("a atividade declarada tem escopo da sonda")
     func activityIsAssertedOnlyWhileProbing() async {
         let harness = LifecycleHarness(at: Self.wake)
         let activity = harness.activity
@@ -143,7 +143,7 @@ struct ProbeLifecycleTests {
         #expect(activity.held == 0)
     }
 
-    @Test("ADR-005: a atividade termina mesmo quando a sonda falha")
+    @Test("a atividade termina mesmo quando a sonda falha")
     func activityEndsWhenTheProbeThrows() async {
         struct ProbeFailure: Error {}
         let harness = LifecycleHarness(at: Self.wake)
@@ -159,7 +159,7 @@ struct ProbeLifecycleTests {
         #expect(harness.activity.held == 0)
     }
 
-    @Test("ADR-005: nenhuma atividade é declarada fora da sonda")
+    @Test("nenhuma atividade é declarada fora da sonda")
     func noActivityIsAssertedOutsideProbes() async {
         let harness = LifecycleHarness(at: Self.wake)
 

@@ -16,7 +16,7 @@ struct CadenceNatureTests {
     private static let idleCeiling = cadence(900, .idle)
     private static let afterFailure = cadence(1800, .widenedByFailure)
 
-    @Test("AC-13: as quatro naturezas observáveis são distinguíveis entre si")
+    @Test("as quatro naturezas observáveis são distinguíveis entre si")
     func theFourObservedNaturesAreDistinct() {
         let observed: Set<Cadence.Nature> = [.base, .idle, .widenedByFailure, .deferredBySystem]
 
@@ -26,7 +26,7 @@ struct CadenceNatureTests {
             == [.deferredBySystem])
     }
 
-    @Test("AC-14: a maior cadência de ociosidade não decresce enquanto a leitura é a mesma")
+    @Test("a maior cadência de ociosidade não decresce enquanto a leitura é a mesma")
     func maxIdleCadenceNeverDecreases() {
         var maxIdle = MaxIdleCadenceSinceReading(atReading: Self.base)
 
@@ -36,7 +36,7 @@ struct CadenceNatureTests {
         #expect(maxIdle.value == .seconds(900))
     }
 
-    @Test("AC-15: a maior cadência de ociosidade recomeça a cada leitura nova")
+    @Test("a maior cadência de ociosidade recomeça a cada leitura nova")
     func maxIdleCadenceRestartsAtEachReading() {
         var maxIdle = MaxIdleCadenceSinceReading(atReading: Self.base)
         maxIdle.observe(Self.idleCeiling)
@@ -46,7 +46,7 @@ struct CadenceNatureTests {
         #expect(maxIdle.value == .seconds(180))
     }
 
-    @Test("AC-13: ampliação por falha não eleva a tolerância de obsolescência")
+    @Test("ampliação por falha não eleva a tolerância de obsolescência")
     func failureWideningDoesNotBuyTolerance() {
         var maxIdle = MaxIdleCadenceSinceReading(atReading: Self.base)
 
@@ -56,7 +56,7 @@ struct CadenceNatureTests {
         #expect(ScheduledNature.widenedByFailure.raisesMaxIdleCadence == false)
     }
 
-    @Test("AC-14: só ritmo base e ociosidade elevam a maior cadência de ociosidade")
+    @Test("só ritmo base e ociosidade elevam a maior cadência de ociosidade")
     func onlyChosenCadencesRaiseTolerance() {
         #expect(ScheduledNature.base.raisesMaxIdleCadence)
         #expect(ScheduledNature.idle.raisesMaxIdleCadence)

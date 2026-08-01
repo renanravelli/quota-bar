@@ -32,7 +32,7 @@ struct ProbePlannerTests {
         return planner
     }
 
-    @Test("AC-13: a leitura em ritmo base publica cadência base de 3 minutos")
+    @Test("a leitura em ritmo base publica cadência base de 3 minutos")
     func firstReadingPublishesTheBaseCadence() {
         let planner = Self.plannerAfterFirstReading(utilizationChanged: true)
 
@@ -41,7 +41,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt == Self.minute(3))
     }
 
-    @Test("AC-13: ociosidade cresce até o teto de 15 minutos e para nele")
+    @Test("ociosidade cresce até o teto de 15 minutos e para nele")
     func idlenessGrowsUpToTheCeiling() {
         var planner = Self.plannerAfterFirstReading()
         #expect(planner.cadence.nature == .idle)
@@ -55,7 +55,7 @@ struct ProbePlannerTests {
         #expect(planner.cadence.nature == .idle)
     }
 
-    @Test("AC-13: as três naturezas que se agendam são distinguíveis; a quarta não se agenda")
+    @Test("as três naturezas que se agendam são distinguíveis; a quarta não se agenda")
     func theThreeScheduledNaturesAreDistinguishable() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
         var natures: [ScheduledNature] = [planner.cadence.nature]
@@ -70,7 +70,7 @@ struct ProbePlannerTests {
         #expect(Set(natures) == Set(ScheduledNature.allCases))
     }
 
-    @Test("AC-16: os três gatilhos devolvem o ritmo base")
+    @Test("os três gatilhos devolvem o ritmo base")
     func theThreeTriggersRestoreTheBaseCadence() {
         var byViewer = Self.idleAtCeiling()
         byViewer.setViewerObserving(true, at: Self.minute(60))
@@ -89,7 +89,7 @@ struct ProbePlannerTests {
         #expect(byWake.scheduledAt == Self.minute(60))
     }
 
-    @Test("AC-14: a maior cadência de ociosidade não decresce quando a cadência volta ao ritmo base")
+    @Test("a maior cadência de ociosidade não decresce quando a cadência volta ao ritmo base")
     func maxIdleCadenceNeverShrinksWithoutANewReading() {
         var planner = Self.idleAtCeiling()
         #expect(planner.maxIdleCadenceSinceReading == ProbePlanner.idleCeiling)
@@ -100,7 +100,7 @@ struct ProbePlannerTests {
         #expect(planner.maxIdleCadenceSinceReading == ProbePlanner.idleCeiling)
     }
 
-    @Test("AC-15: a maior cadência de ociosidade recomeça a cada leitura")
+    @Test("a maior cadência de ociosidade recomeça a cada leitura")
     func maxIdleCadenceRestartsOnEveryReading() {
         var planner = Self.idleAtCeiling()
         planner.setViewerObserving(true, at: Self.minute(60))
@@ -110,7 +110,7 @@ struct ProbePlannerTests {
         #expect(planner.maxIdleCadenceSinceReading == ProbePlanner.baseInterval)
     }
 
-    @Test("AC-14: ampliação por falha não eleva a maior cadência de ociosidade")
+    @Test("ampliação por falha não eleva a maior cadência de ociosidade")
     func failureNeverRaisesTheIdleCeiling() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
 
@@ -120,7 +120,7 @@ struct ProbePlannerTests {
         #expect(planner.maxIdleCadenceSinceReading == ProbePlanner.baseInterval)
     }
 
-    @Test("AC-57: a espera por uma leitura adiada não entra na maior cadência de ociosidade")
+    @Test("a espera por uma leitura adiada não entra na maior cadência de ociosidade")
     func deferralNeverRaisesTheIdleCeiling() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
 
@@ -133,7 +133,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt < Self.minute(30))
     }
 
-    @Test("AC-17: observador entrando tarde não antecipa a leitura agendada")
+    @Test("o planejador não antecipa a leitura agendada para observador que chega tarde")
     func lateViewerDoesNotAdvanceTheProbe() {
         var planner = Self.idleAtCeiling()
         let scheduled = planner.scheduledAt
@@ -143,7 +143,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt == scheduled)
     }
 
-    @Test("AC-18: observador entrando cedo acelera para o minuto 4, respeitando o piso")
+    @Test("observador entrando cedo acelera para o minuto 4, respeitando o piso")
     func earlyViewerAcceleratesWithinTheFloor() {
         var planner = ProbePlanner(startingAt: Self.start)
         planner.recordReading(utilizationChanged: false, at: Self.start)
@@ -156,7 +156,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt >= planner.lastProbeAt.addingTimeInterval(60))
     }
 
-    @Test("AC-19: entrar e sair dez vezes não move o instante nem provoca leitura")
+    @Test("entrar e sair dez vezes não move o instante nem provoca leitura")
     func repeatedObservationNeverAmplifies() {
         var planner = ProbePlanner(startingAt: Self.start)
         planner.recordReading(utilizationChanged: false, at: Self.start)
@@ -182,7 +182,7 @@ struct ProbePlannerTests {
         #expect(due == 0)
     }
 
-    @Test("AC-20 e AC-39: o adiamento se mede desde o agendamento vigente, não desde a leitura")
+    @Test("o adiamento se mede desde o agendamento vigente, não desde a leitura")
     func deferralIsMeasuredFromTheAppointmentThatIsInForce() {
         var planner = Self.idleAtCeiling()
         let reading = planner.lastProbeAt
@@ -200,7 +200,7 @@ struct ProbePlannerTests {
         #expect(Self.isDeferred(planner, at: minute(18)))
     }
 
-    @Test("AC-38: a retomada reancora a medição, e o que a plataforma segurar depois dela é adiamento")
+    @Test("a retomada reancora a medição, e o que a plataforma segurar depois dela é adiamento")
     func resumeReanchorsWithoutAmnestyingWhatComesAfter() {
         var planner = Self.idleAtCeiling()
         let wake = Self.minute(480)
@@ -213,7 +213,7 @@ struct ProbePlannerTests {
         #expect(Self.isDeferred(planner, at: wake.addingTimeInterval(300)))
     }
 
-    @Test("REQ-11: mudança de regime não move a última leitura nem pede leitura")
+    @Test("mudança de regime não move a última leitura nem pede leitura")
     func regimeChangeNeverCountsAsAProbe() {
         var planner = Self.plannerAfterFirstReading()
         let lastProbe = planner.lastProbeAt
@@ -224,7 +224,7 @@ struct ProbePlannerTests {
         #expect(planner.lastProbeAt == lastProbe)
     }
 
-    @Test("REQ-11: pedir leitura agora respeita o piso de 60 segundos desde a última")
+    @Test("pedir leitura agora respeita o piso de 60 segundos desde a última")
     func immediateReadStillRespectsTheFloor() {
         var planner = Self.plannerAfterFirstReading()
 
@@ -235,7 +235,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt == Self.minute(30))
     }
 
-    @Test("AC-22: estrangulamento amplia a cadência, e Retry-After vence o cálculo local")
+    @Test("estrangulamento amplia a cadência, e Retry-After vence o cálculo local")
     func throttlingWidensAndRetryAfterWins() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
 
@@ -248,7 +248,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt == Self.minute(9).addingTimeInterval(1200))
     }
 
-    @Test("AC-34: falha tolerada na janela após o acordar não amplia a cadência")
+    @Test("falha tolerada na janela após o acordar não amplia a cadência")
     func toleratedFailureKeepsTheCadence() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
 
@@ -259,7 +259,7 @@ struct ProbePlannerTests {
         #expect(planner.scheduledAt == Self.minute(6))
     }
 
-    @Test("AC-21: leitura bem-sucedida nunca amplia a cadência")
+    @Test("leitura bem-sucedida nunca amplia a cadência")
     func aReadingNeverWidensTheCadence() {
         var planner = Self.plannerAfterFirstReading(utilizationChanged: true)
         planner.recordThrottling(retryAfter: nil, jitter: 1, at: Self.minute(3))

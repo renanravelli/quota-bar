@@ -20,7 +20,7 @@ struct ErrorBodyExposureTests {
         )
     }
 
-    @Test("QB-API-001 AC-26: o corpo de erro não chega ao estado publicado", arguments: refusals)
+    @Test("o corpo de erro não chega ao estado publicado", arguments: refusals)
     func noPublishedStateCarriesTheErrorBody(response: ProbeHTTPResponse) async {
         let harness = ProviderHarness(responses: [response])
         #expect(await harness.waitForState { if case .failed = $0.lastAttempt { true } else { false } })
@@ -33,7 +33,7 @@ struct ErrorBodyExposureTests {
         }
     }
 
-    @Test("QB-API-001 AC-26: a leitura seguinte ao estrangulamento não ressuscita o corpo de erro")
+    @Test("a leitura seguinte ao estrangulamento não ressuscita o corpo de erro")
     func aReadingAfterAThrottlingCarriesNoErrorBody() async {
         let harness = ProviderHarness(responses: [Self.throttling, CannedResponse.reading()])
         #expect(await harness.waitForState { $0.lastAttempt == .failed(.communicationFailure) })

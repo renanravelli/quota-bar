@@ -14,37 +14,37 @@ struct IndicatorTextFormatterTests {
         )
     }
 
-    @Test("AC-3: janela de cinco horas com 78,9% é exibida como 5h 78%")
+    @Test("janela de cinco horas com 78,9% é exibida como 5h 78%")
     func readyTextForFiveHourWindow() {
         let text = IndicatorTextFormatter.text(for: .ready(Self.displayValue(.fiveHour, "78.9")))
 
         #expect(text == "5h 78%")
     }
 
-    @Test("AC-34: o rótulo da janela semanal é 7d")
+    @Test("o rótulo da janela semanal é 7d")
     func readyTextForSevenDayWindow() {
         #expect(IndicatorTextFormatter.text(for: .ready(Self.displayValue(.sevenDay, "41"))) == "7d 41%")
     }
 
-    @Test("AC-6: obsoleto recebe o sinal ~ imediatamente antes do percentual")
+    @Test("obsoleto recebe o sinal ~ imediatamente antes do percentual")
     func staleTextCarriesTilde() {
         #expect(IndicatorTextFormatter.text(for: .stale(Self.displayValue(.fiveHour, "42"))) == "5h ~42%")
         #expect(IndicatorTextFormatter.text(for: .stale(Self.displayValue(.sevenDay, "78"))) == "7d ~78%")
     }
 
-    @Test("AC-15: esgotado é exibido com o rótulo e 100%")
+    @Test("esgotado é exibido com o rótulo e 100%")
     func exhaustedText() {
         #expect(IndicatorTextFormatter.text(for: .exhausted(Self.displayValue(.fiveHour, "100"))) == "5h 100%")
     }
 
-    @Test("AC-16: percentual acima de 100 é recortado para 100% na exibição")
+    @Test("percentual acima de 100 é recortado para 100% na exibição")
     func overageIsClippedToOneHundred() {
         #expect(IndicatorTextFormatter.text(for: .exhausted(Self.displayValue(.fiveHour, "118"))) == "5h 100%")
         #expect(IndicatorTextFormatter.text(for: .exhausted(Self.displayValue(.sevenDay, "250"))) == "7d 100%")
         #expect(IndicatorTextFormatter.text(for: .stale(Self.displayValue(.fiveHour, "118"))) == "5h ~100%")
     }
 
-    @Test("AC-7 e AC-8: os estados sem valor não têm texto")
+    @Test("os estados sem valor não têm texto")
     func statesWithoutValueHaveNoText() {
         #expect(IndicatorTextFormatter.text(for: .notConfigured).isEmpty)
         #expect(IndicatorTextFormatter.text(for: .loading).isEmpty)
@@ -52,7 +52,7 @@ struct IndicatorTextFormatterTests {
         #expect(IndicatorTextFormatter.text(for: .failed(.credentialExpired)).isEmpty)
     }
 
-    @Test("AC-34: o texto começa sempre pelo rótulo da janela e nunca mostra percentual sem rótulo")
+    @Test("o texto começa sempre pelo rótulo da janela e nunca mostra percentual sem rótulo")
     func textAlwaysStartsWithWindowLabel() {
         for window in [QuotaWindow.fiveHour, .sevenDay] {
             let label = window == .fiveHour ? "5h" : "7d"
@@ -67,7 +67,7 @@ struct IndicatorTextFormatterTests {
         }
     }
 
-    @Test("AC-34: nenhuma combinação de estado excede nove caracteres")
+    @Test("nenhuma combinação de estado excede nove caracteres")
     func noCombinationExceedsMaximumLength() {
         var widest = ""
 
@@ -95,7 +95,7 @@ struct IndicatorTextFormatterTests {
         #expect(widest.count == 8)
     }
 
-    @Test("AC-34: o pior caso corrente é 5h ~100%, com oito caracteres")
+    @Test("o pior caso corrente é 5h ~100%, com oito caracteres")
     func worstCaseLeavesOneCharacterOfSlack() {
         let text = IndicatorTextFormatter.text(for: .stale(Self.displayValue(.fiveHour, "100")))
 
@@ -104,7 +104,7 @@ struct IndicatorTextFormatterTests {
         #expect(IndicatorTextFormatter.maxLength - text.count == 1)
     }
 
-    @Test("AC-30: rótulo e percentual mudam juntos, nunca cruzados")
+    @Test("rótulo e percentual mudam juntos, nunca cruzados")
     func labelAndPercentChangeTogether() {
         let before = IndicatorTextFormatter.text(for: .ready(Self.displayValue(.fiveHour, "78")))
         let after = IndicatorTextFormatter.text(for: .ready(Self.displayValue(.sevenDay, "44")))

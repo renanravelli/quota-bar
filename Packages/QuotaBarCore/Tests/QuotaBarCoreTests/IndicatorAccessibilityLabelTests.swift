@@ -27,7 +27,7 @@ struct IndicatorAccessibilityLabelTests {
         ]
     }
 
-    @Test("AC-24: em ready o rótulo enuncia a janela e o percentual por extenso")
+    @Test("em ready o rótulo enuncia a janela e o percentual por extenso")
     func readyAnnouncesWindowAndPercent() {
         let label = IndicatorAccessibilityLabel.text(
             for: .ready(Self.displayValue(.sevenDay, "78")),
@@ -37,7 +37,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(label == "QuotaBar, janela semanal, 78 por cento consumidos")
     }
 
-    @Test("AC-24: em stale o rótulo enuncia também que o dado está desatualizado")
+    @Test("em stale o rótulo enuncia também que o dado está desatualizado")
     func staleAnnouncesOutdatedData() {
         let label = IndicatorAccessibilityLabel.text(
             for: .stale(Self.displayValue(.fiveHour, "78")),
@@ -47,14 +47,14 @@ struct IndicatorAccessibilityLabelTests {
         #expect(label == "QuotaBar, janela de 5 horas, 78 por cento consumidos, dado desatualizado")
     }
 
-    @Test("AC-24: em notConfigured o rótulo enuncia a credencial não configurada")
+    @Test("em notConfigured o rótulo enuncia a credencial não configurada")
     func notConfiguredAnnouncesMissingCredential() {
         let label = IndicatorAccessibilityLabel.text(for: .notConfigured, source: .primaryProbe)
 
         #expect(label == "QuotaBar, credencial não configurada")
     }
 
-    @Test("AC-24: o rótulo não se limita a repetir o texto do indicador")
+    @Test("o rótulo não se limita a repetir o texto do indicador")
     func labelIsNotTheIndicatorText() {
         let situations: [IndicatorState] = [
             .ready(Self.displayValue(.sevenDay, "78")),
@@ -75,7 +75,7 @@ struct IndicatorAccessibilityLabelTests {
         }
     }
 
-    @Test("AC-24: cada um dos seis estados tem rótulo próprio")
+    @Test("cada um dos seis estados tem rótulo próprio")
     func everyStateHasItsOwnLabel() {
         let labels = Self.statesOfEachKind().map {
             IndicatorAccessibilityLabel.text(for: $0, source: .primaryProbe)
@@ -85,7 +85,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(labels.allSatisfy { $0.hasPrefix("QuotaBar, ") })
     }
 
-    @Test("AC-24 e AC-49: os sete motivos de falha são enunciados de forma distinta entre si e de notConfigured")
+    @Test("os sete motivos de falha são enunciados de forma distinta entre si e de notConfigured")
     func everyFailureReasonHasItsOwnPhrase() {
         let labels = Self.failureReasons.map {
             IndicatorAccessibilityLabel.text(for: .failed($0), source: .primaryProbe)
@@ -99,7 +99,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(!labels.contains(loading))
     }
 
-    @Test("AC-49: o rótulo de Claude Code não encontrado não fala em credencial")
+    @Test("o rótulo de Claude Code não encontrado não fala em credencial")
     func claudeCodeNotFoundIsNotACredentialPhrase() {
         let label = IndicatorAccessibilityLabel.text(for: .failed(.claudeCodeNotFound), source: .primaryProbe)
 
@@ -107,7 +107,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(!label.lowercased().contains("credencial"))
     }
 
-    @Test("AC-24: os estados sem valor não anunciam janela nem percentual")
+    @Test("os estados sem valor não anunciam janela nem percentual")
     func statesWithoutValueAnnounceNeitherWindowNorPercent() {
         var states: [IndicatorState] = [.notConfigured, .loading]
         states.append(contentsOf: Self.failureReasons.map { .failed($0) })
@@ -120,7 +120,7 @@ struct IndicatorAccessibilityLabelTests {
         }
     }
 
-    @Test("AC-24: em exhausted o rótulo enuncia o esgotamento com o percentual recortado em 100")
+    @Test("em exhausted o rótulo enuncia o esgotamento com o percentual recortado em 100")
     func exhaustedAnnouncesDepletion() {
         let atLimit = IndicatorAccessibilityLabel.text(
             for: .exhausted(Self.displayValue(.fiveHour, "100")),
@@ -140,7 +140,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(staleAboveLimit == "QuotaBar, janela semanal, 100 por cento consumidos, dado desatualizado")
     }
 
-    @Test("AC-24: as duas janelas são nomeadas por extenso e sem ambiguidade")
+    @Test("as duas janelas são nomeadas por extenso e sem ambiguidade")
     func bothWindowsAreNamedInFull() {
         let fiveHour = IndicatorAccessibilityLabel.text(
             for: .ready(Self.displayValue(.fiveHour, "42")),
@@ -155,7 +155,7 @@ struct IndicatorAccessibilityLabelTests {
         #expect(sevenDay == "QuotaBar, janela semanal, 42 por cento consumidos")
     }
 
-    @Test("AC-24: o percentual é anunciado por palavra em toda a faixa de valores")
+    @Test("o percentual é anunciado por palavra em toda a faixa de valores")
     func percentIsAnnouncedInWords() {
         for percent in ["0", "7", "42", "74", "75", "89", "90", "99"] {
             let label = IndicatorAccessibilityLabel.text(
@@ -167,7 +167,7 @@ struct IndicatorAccessibilityLabelTests {
         }
     }
 
-    @Test("AC-24: o percentual anunciado acompanha o exibido, inclusive quando truncado")
+    @Test("o percentual anunciado acompanha o exibido, inclusive quando truncado")
     func announcedPercentMatchesTheDisplayedOne() {
         for percent in ["78.9", "50.4", "99.99", "118"] {
             let state = IndicatorState.ready(Self.displayValue(.fiveHour, percent))
@@ -180,7 +180,7 @@ struct IndicatorAccessibilityLabelTests {
         }
     }
 
-    @Test("AC-24: o modo de contingência é anunciado em todos os seis estados")
+    @Test("o modo de contingência é anunciado em todos os seis estados")
     func contingencyIsAnnouncedInEveryState() {
         for state in Self.statesOfEachKind() {
             let primary = IndicatorAccessibilityLabel.text(for: state, source: .primaryProbe)
@@ -191,7 +191,7 @@ struct IndicatorAccessibilityLabelTests {
         }
     }
 
-    @Test("AC-24: em contingência e obsoleto as duas condições são anunciadas")
+    @Test("em contingência e obsoleto as duas condições são anunciadas")
     func staleUnderContingencyAnnouncesBothConditions() {
         let label = IndicatorAccessibilityLabel.text(
             for: .stale(Self.displayValue(.fiveHour, "33")),

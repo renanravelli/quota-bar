@@ -10,7 +10,7 @@ private func utilization(_ percent: String) -> Utilization {
 @Suite("Medidor de segmentos")
 struct MeterTests {
     @Test(
-        "AC-14: segmentos acesos por percentual",
+        "segmentos acesos por percentual",
         arguments: [
             (percent: "0", lit: 0),
             (percent: "0.1", lit: 1),
@@ -25,7 +25,7 @@ struct MeterTests {
         #expect(Meter.litSegments(for: utilization(percent)) == lit)
     }
 
-    @Test("AC-14: em 78,9% o medidor acende 16 e o número continua exibindo 78")
+    @Test("em 78,9% o medidor acende 16 e o número continua exibindo 78")
     func meterRoundsUpWhileTheNumberTruncates() {
         let value = utilization("78.9")
 
@@ -33,7 +33,7 @@ struct MeterTests {
         #expect(value.displayablePercent == 78)
     }
 
-    @Test("AC-14: qualquer consumo maior que zero acende ao menos um segmento")
+    @Test("qualquer consumo maior que zero acende ao menos um segmento")
     func anyConsumptionLightsAtLeastOneSegment() {
         #expect(Meter.litSegments(for: Utilization(basisPoints: 0)!) == 0)
         #expect(Meter.litSegments(for: Utilization(basisPoints: 1)!) == 1)
@@ -41,7 +41,7 @@ struct MeterTests {
         #expect(Meter.litSegments(for: utilization("4.99")) == 1)
     }
 
-    @Test("AC-14: o medidor nunca passa de vinte segmentos, mesmo com overage")
+    @Test("o medidor nunca passa de vinte segmentos, mesmo com overage")
     func meterIsCappedAtTwentySegments() {
         #expect(Meter.segmentCount == 20)
         #expect(Meter.litSegments(for: utilization("100")) == 20)
@@ -49,7 +49,7 @@ struct MeterTests {
         #expect(Meter.litSegments(for: utilization("250")) == 20)
     }
 
-    @Test("AC-14: o medidor é monotônico e cobre todos os degraus")
+    @Test("o medidor é monotônico e cobre todos os degraus")
     func meterIsMonotonicAcrossTheRange() {
         var previous = 0
 
@@ -66,19 +66,19 @@ struct MeterTests {
 
 @Suite("Gradiente de consumo")
 struct ConsumptionGradientTests {
-    @Test("AC-15: a cor coincide com as três âncoras")
+    @Test("a cor coincide com as três âncoras")
     func gradientMatchesItsAnchors() {
         #expect(ConsumptionGradient.color(for: utilization("0")) == Palette.ok)
         #expect(ConsumptionGradient.color(for: utilization("75")) == Palette.warning)
         #expect(ConsumptionGradient.color(for: utilization("100")) == Palette.bad)
     }
 
-    @Test("AC-15: consumo acima de 100% permanece na âncora ruim")
+    @Test("consumo acima de 100% permanece na âncora ruim")
     func overageStaysAtTheBadAnchor() {
         #expect(ConsumptionGradient.color(for: utilization("118")) == Palette.bad)
     }
 
-    @Test("AC-15: a cor interpola entre as âncoras nos valores intermediários")
+    @Test("a cor interpola entre as âncoras nos valores intermediários")
     func gradientInterpolatesBetweenAnchors() {
         let midway = ConsumptionGradient.color(for: utilization("37.5"))
 
@@ -89,7 +89,7 @@ struct ConsumptionGradientTests {
         #expect(abs(midway.blue - (Palette.ok.blue + Palette.warning.blue) / 2) < 0.0001)
     }
 
-    @Test("AC-15: não há descontinuidade nas fronteiras de faixa 74/75 e 89/90")
+    @Test("não há descontinuidade nas fronteiras de faixa 74/75 e 89/90")
     func gradientHasNoJumpAtBandBoundaries() {
         for boundary in [7_400, 8_900] {
             let stepAtBoundary = step(from: boundary, to: boundary + 100)
@@ -102,7 +102,7 @@ struct ConsumptionGradientTests {
         }
     }
 
-    @Test("AC-15: a única junção entre trechos, em 75%, não produz salto")
+    @Test("a única junção entre trechos, em 75%, não produz salto")
     func theJunctionBetweenSegmentsIsSmooth() {
         let justBelow = step(from: 7_499, to: 7_500)
         let justAbove = step(from: 7_500, to: 7_501)
@@ -119,7 +119,7 @@ struct ConsumptionGradientTests {
         )
     }
 
-    @Test("AC-15: a curva é contínua em todo o intervalo, inclusive na âncora de 75%")
+    @Test("a curva é contínua em todo o intervalo, inclusive na âncora de 75%")
     func gradientIsContinuousAcrossTheWholeRange() {
         var largestStep = 0.0
         var previous = ConsumptionGradient.color(for: Utilization(basisPoints: 0)!)

@@ -15,7 +15,7 @@ struct MascotAbsenceTests {
         .normal, .attention, .critical, .exhausted, .noValue
     ]
 
-    @Test("QB-APP-002 AC-19: há uma arte de mascote para cada uma das cinco expressões")
+    @Test("há uma arte de mascote para cada uma das cinco expressões")
     func everyExpressionHasItsOwnArt() {
         for expression in Self.expressions {
             #expect(MascotAsset.image(for: expression) != nil, "sem arte de mascote para \(expression)")
@@ -23,14 +23,14 @@ struct MascotAbsenceTests {
         #expect(Set(Self.expressions.map(MascotAsset.imageName)).count == 5)
     }
 
-    @Test("QB-APP-002 AC-33: com a arte indisponível no bundle, nenhuma imagem é carregada e não há reserva")
+    @Test("com a arte indisponível no bundle, nenhuma imagem é carregada e não há reserva")
     func absentArtLoadsNoImageAndHasNoFallback() {
         for expression in Self.expressions {
             #expect(MascotAsset.image(for: expression, in: Self.bundleWithoutArt) == nil)
         }
     }
 
-    @Test("QB-APP-002 AC-33: o painel continua com todas as suas informações sem o mascote")
+    @Test("o painel continua com todas as suas informações sem o mascote")
     func panelKeepsEveryInformationWithoutTheMascot() {
         let snapshot = QuotaSnapshot(
             fiveHour: WindowReading(
@@ -78,7 +78,7 @@ struct MascotAbsenceTests {
         #expect(!content.quitTitle.isEmpty)
     }
 
-    @Test("QB-APP-002 AC-19: a expressão acompanha a faixa mesmo sem arte para desenhá-la")
+    @Test("a expressão acompanha a faixa mesmo sem arte para desenhá-la")
     func expressionIsResolvedEvenWithoutArt() {
         let utilization = Utilization(originPercent: 95)!
         let value = DisplayValue(

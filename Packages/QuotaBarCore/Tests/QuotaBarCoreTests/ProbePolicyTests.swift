@@ -5,14 +5,14 @@ import Testing
 
 @Suite("Backoff, piso e política de rede")
 struct ProbePolicyTests {
-    @Test("AC-18: o piso de 60 segundos recusa qualquer cadência menor")
+    @Test("o piso de 60 segundos recusa qualquer cadência menor")
     func floorRejectsAnythingBelowSixtySeconds() {
         #expect(Cadence.floor == .seconds(60))
         #expect(Cadence(interval: .seconds(59), nature: .base) == nil)
         #expect(Cadence(interval: .seconds(60), nature: .base)?.interval == .seconds(60))
     }
 
-    @Test("AC-22: a falha de comunicação amplia a cadência, dobrando com jitter")
+    @Test("a falha de comunicação amplia a cadência, dobrando com jitter")
     func communicationFailureWidensTheCadence() {
         let current = Duration.seconds(180)
 
@@ -21,7 +21,7 @@ struct ProbePolicyTests {
         #expect(BackoffPolicy.widened(from: current, retryAfter: nil, jitter: 0.5) == .seconds(270))
     }
 
-    @Test("AC-22: o jitter nunca encurta a cadência nem passa do dobro")
+    @Test("o jitter nunca encurta a cadência nem passa do dobro")
     func jitterStaysBetweenTheCurrentCadenceAndItsDouble() {
         let current = Duration.seconds(180)
 
@@ -32,7 +32,7 @@ struct ProbePolicyTests {
         }
     }
 
-    @Test("AC-22: a ampliação sucessiva para no teto de 30 minutos")
+    @Test("a ampliação sucessiva para no teto de 30 minutos")
     func wideningStopsAtTheCeiling() {
         var interval = Duration.seconds(180)
 
@@ -44,7 +44,7 @@ struct ProbePolicyTests {
         #expect(interval == BackoffPolicy.ceiling)
     }
 
-    @Test("AC-22: Retry-After vence o cálculo local, respeitado o piso")
+    @Test("Retry-After vence o cálculo local, respeitado o piso")
     func retryAfterBeatsTheLocalCalculation() {
         let current = Duration.seconds(180)
 
@@ -53,17 +53,17 @@ struct ProbePolicyTests {
         #expect(BackoffPolicy.widened(from: current, retryAfter: .seconds(3600), jitter: 0) == .seconds(3600))
     }
 
-    @Test("AC-22: falha de comunicação manda espaçar as leituras")
+    @Test("falha de comunicação manda espaçar as leituras")
     func communicationFailureAsksForWidening() {
         #expect(NetworkPolicy.reaction(to: .communicationFailure, withinWakeTolerance: false) == .widenCadence)
     }
 
-    @Test("AC-34: rede indisponível na janela após o acordar não amplia a cadência")
+    @Test("a política mantém a cadência quando a rede falha dentro da tolerância do acordar")
     func networkUnavailableRightAfterWakeIsTolerated() {
         #expect(NetworkPolicy.reaction(to: .communicationFailure, withinWakeTolerance: true) == .keepCadence)
     }
 
-    @Test("AC-28: recusa de credencial interrompe as leituras periódicas")
+    @Test("recusa de credencial interrompe as leituras periódicas")
     func credentialRefusalStopsPeriodicProbing() {
         let halting: [FailureReason] = [
             .credentialRejected,
@@ -78,13 +78,13 @@ struct ProbePolicyTests {
         }
     }
 
-    @Test("QB-API-001 REQ-2: sem Claude Code não há leitura alguma, com ou sem tolerância de acordar")
+    @Test("sem Claude Code não há leitura alguma, com ou sem tolerância de acordar")
     func claudeCodeNotFoundStopsProbing() {
         #expect(NetworkPolicy.reaction(to: .claudeCodeNotFound, withinWakeTolerance: false) == .stopProbing)
         #expect(NetworkPolicy.reaction(to: .claudeCodeNotFound, withinWakeTolerance: true) == .stopProbing)
     }
 
-    @Test("AC-22: os sete motivos têm reação definida, sem caso omisso")
+    @Test("os sete motivos têm reação definida, sem caso omisso")
     func everyFailureReasonHasAReaction() {
         #expect(FailureReason.allCases.count == 7)
 
@@ -96,7 +96,7 @@ struct ProbePolicyTests {
         #expect(Set(reactions) == [.stopProbing, .widenCadence, .keepCadence])
     }
 
-    @Test("AC-22: resposta inesperada não entra em ciclo de espaçamento")
+    @Test("resposta inesperada não entra em ciclo de espaçamento")
     func unexpectedResponseDoesNotWiden() {
         #expect(NetworkPolicy.reaction(to: .unexpectedResponse, withinWakeTolerance: false) == .keepCadence)
     }

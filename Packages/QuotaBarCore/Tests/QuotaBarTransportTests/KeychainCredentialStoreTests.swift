@@ -40,7 +40,7 @@ private struct Fixture {
 
 @Suite("Ciclo de vida da credencial no Keychain")
 struct KeychainCredentialStoreTests {
-    @Test("REQ-13: gravar guarda o valor e a presença passa a ser afirmada")
+    @Test("gravar guarda o valor e a presença passa a ser afirmada")
     func storingMakesTheCredentialPresent() async {
         let fixture = Fixture()
 
@@ -50,7 +50,7 @@ struct KeychainCredentialStoreTests {
         #expect(await fixture.store.load().value?.withValue { $0 } == canary)
     }
 
-    @Test("REQ-13: a credencial é gravada com acesso apenas com a máquina desbloqueada e sem sincronização")
+    @Test("a credencial é gravada com acesso apenas com a máquina desbloqueada e sem sincronização")
     func storedItemHonoursTheDeclaredAccessibility() async throws {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -63,7 +63,7 @@ struct KeychainCredentialStoreTests {
         #expect(add.attributes[kSecAttrSynchronizable as String] as? Bool == false)
     }
 
-    @Test("REQ-11: gravar sobre uma credencial existente substitui o valor, sem duplicar o item")
+    @Test("gravar sobre uma credencial existente substitui o valor, sem duplicar o item")
     func storingOverAnExistingCredentialReplacesIt() async {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -73,7 +73,7 @@ struct KeychainCredentialStoreTests {
         #expect(await fixture.store.load().value?.withValue { $0 } == "sk-ant-oat01-SEGUNDO-VALOR")
     }
 
-    @Test("AC-18: substituição malsucedida preserva a credencial anterior")
+    @Test("gravação recusada pelo Keychain preserva a credencial anterior")
     func failedReplacementPreservesThePreviousCredential() async {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -86,7 +86,7 @@ struct KeychainCredentialStoreTests {
         #expect(await fixture.store.load().value?.withValue { $0 } == canary)
     }
 
-    @Test("AC-19: remover apaga o item, e nenhuma leitura posterior devolve o valor")
+    @Test("remover apaga o item, e nenhuma leitura posterior devolve o valor")
     func removalDeletesTheItem() async {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -97,14 +97,14 @@ struct KeychainCredentialStoreTests {
         #expect(await fixture.store.load().failure == .itemNotFound)
     }
 
-    @Test("REQ-12: remover o que não existe é declarado como item ausente, não como remoção feita")
+    @Test("remover o que não existe é declarado como item ausente, não como remoção feita")
     func removingWhatIsNotThereReportsItemNotFound() async {
         let fixture = Fixture()
 
         #expect(await fixture.store.remove().failure == .itemNotFound)
     }
 
-    @Test("Contratos §3: saber se há credencial não traz o segredo para a memória")
+    @Test("saber se há credencial não traz o segredo para a memória")
     func checkingPresenceNeverRequestsTheValue() async throws {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -116,7 +116,7 @@ struct KeychainCredentialStoreTests {
         #expect(existence.attributes[kSecReturnData as String] == nil)
     }
 
-    @Test("REQ-15: cada estado do Keychain vira uma falha própria, distinta de credencial inválida", arguments: [
+    @Test("cada estado do Keychain vira uma falha própria, distinta de credencial inválida", arguments: [
         (errSecInteractionNotAllowed, KeychainFailure.interactionNotAllowed),
         (errSecAuthFailed, .authorizationDenied),
         (errSecUserCanceled, .authorizationDenied),
@@ -146,7 +146,7 @@ struct KeychainCredentialStoreTests {
         #expect(await fixture.store.isConfigured().value == true)
     }
 
-    @Test("AC-23: nenhum campo da falha de Keychain carrega o valor")
+    @Test("nenhum campo da falha de Keychain carrega o valor")
     func keychainFailureNeverCarriesTheValue() async {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)
@@ -165,7 +165,7 @@ struct KeychainCredentialStoreTests {
         }
     }
 
-    @Test("REQ-13 e REQ-14: o valor só atravessa como dado do item, nunca como atributo de consulta")
+    @Test("o valor só atravessa como dado do item, nunca como atributo de consulta")
     func theValueOnlyTravelsAsTheItemData() async {
         let fixture = Fixture()
         _ = await fixture.store.store(fixture.token)

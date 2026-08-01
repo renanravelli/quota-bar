@@ -48,7 +48,7 @@ private enum Restored {
 @MainActor
 @Suite("Cadência de renderização do painel")
 struct RenderCadenceTests {
-    @Test("QB-APP-001 AC-57: sobre estado restaurado, a idade tem cadência própria com o painel aberto")
+    @Test("sobre estado restaurado, a idade tem cadência própria com o painel aberto")
     func theAgeKeepsItsOwnCadenceOverARestoredState() async throws {
         let ledger = RenderLedger()
         let presenter = Restored.presenter(
@@ -68,7 +68,7 @@ struct RenderCadenceTests {
         #expect(presenter.armedAgeThreshold == Restored.readAt.addingTimeInterval(120), "o piso não se rearmou")
     }
 
-    @Test("QB-APP-001 REQ-8: estado novo com o painel aberto rearma as cadências, sem fechar e reabrir")
+    @Test("estado novo com o painel aberto rearma as cadências, sem fechar e reabrir")
     func newStateWhileThePanelIsOpenRearmsTheCadences() {
         let now = Restored.readAt.addingTimeInterval(30)
         let presenter = Restored.presenter(clock: { now })
@@ -87,7 +87,7 @@ struct RenderCadenceTests {
         #expect(presenter.armedAgeThreshold == Restored.readAt.addingTimeInterval(60))
     }
 
-    @Test("QB-APP-001 AC-26: com o painel fechado nada fica armado, para as três cadências")
+    @Test("com o painel fechado nada fica armado, para as três cadências")
     func nothingIsArmedWhileThePanelIsClosed() async throws {
         let ledger = RenderLedger()
         let presenter = Restored.presenter(
@@ -109,7 +109,7 @@ struct RenderCadenceTests {
         #expect(ledger.recorded.isEmpty, "a cadência de renderização cobrou atividade do repouso")
     }
 
-    @Test("QB-APP-001 AC-26: fechar o painel desarma as três cadências e nada mais é pedido")
+    @Test("fechar o painel desarma as três cadências e nada mais é pedido")
     func closingThePanelDisarmsTheThreeCadences() async throws {
         let ledger = RenderLedger()
         let presenter = Restored.presenter(
@@ -134,7 +134,7 @@ struct RenderCadenceTests {
         #expect(ledger.recorded.count == whileOpen, "alguma cadência continuou correndo com o painel fechado")
     }
 
-    @Test("QB-APP-002 AC-28: com o reset a mais de uma hora, o piso não cria fonte de 1 Hz")
+    @Test("com o reset a mais de uma hora, o piso não cria fonte de 1 Hz")
     func theFloorCreatesNoOneHertzSourceWithADistantReset() async throws {
         let ledger = RenderLedger()
         let presenter = Restored.presenter(
@@ -156,7 +156,7 @@ struct RenderCadenceTests {
         #expect(ledger.recorded.count == whileOpening, "o piso da idade passou a pedir renderização a cada segundo")
     }
 
-    @Test("QB-APP-001 REQ-8: a linha de situação usa a régua do domínio, e não uma própria")
+    @Test("a linha de situação usa a régua do domínio, e não uma própria")
     func theSituationLineConsumesTheDomainRuler() {
         let presenter = Restored.presenter(clock: { Restored.readAt })
         presenter.receive(Restored.state())
@@ -173,7 +173,7 @@ struct RenderCadenceTests {
 @MainActor
 @Suite("Relógio de renderização do painel")
 struct PanelRenderClockTests {
-    @Test("contratos §9.10: o instante sai do relógio no ato de construir, sem marcação prévia")
+    @Test("o instante sai do relógio no ato de construir, sem marcação prévia")
     func theInstantIsReadWhenTheContentIsBuilt() {
         let hand = SettableClock(Restored.readAt)
         let render = PanelRenderClock(clock: hand.read)
@@ -188,7 +188,7 @@ struct PanelRenderClockTests {
         #expect(content.situation.contains(AgeDisplay.phrase(for: .seconds(3 * 3_600))))
     }
 
-    @Test("contratos §9.10: o que o temporizador produz é invalidação de quem leu o instante")
+    @Test("o que o temporizador produz é invalidação de quem leu o instante")
     func markingInvalidatesWhoeverReadTheInstant() {
         let render = PanelRenderClock(clock: { Restored.readAt })
         let invalidations = Invalidations()

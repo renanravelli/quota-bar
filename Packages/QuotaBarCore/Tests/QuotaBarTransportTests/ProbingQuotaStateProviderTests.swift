@@ -133,7 +133,7 @@ final class ProviderHarness {
 
 @Suite("Provedor real de estado de cota")
 struct ProbingQuotaStateProviderTests {
-    @Test("AC-5: a leitura bem-sucedida vira estado publicado, em ritmo base e fonte primária")
+    @Test("a leitura bem-sucedida vira estado publicado, em ritmo base e fonte primária")
     func aReadingBecomesPublishedState() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
 
@@ -149,7 +149,7 @@ struct ProbingQuotaStateProviderTests {
         if case .succeeded = state.lastAttempt {} else { Issue.record("a tentativa deveria ter tido sucesso") }
     }
 
-    @Test("AC-17 e AC-19: passar a observar muda o regime e não provoca leitura")
+    @Test("passar a observar muda o regime e não provoca leitura")
     func observingChangesTheRegimeWithoutReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -164,7 +164,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.cycle?.cadence.interval == ProbePlanner.baseInterval)
     }
 
-    @Test("AC-36 de QB-APP-001: com o observador presente a cadência volta ao ritmo base")
+    @Test("com o observador presente a cadência volta ao ritmo base")
     func theViewerRestoresTheBaseCadence() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -181,7 +181,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 2)
     }
 
-    @Test("REQ-11: pedir leitura agora provoca exatamente uma leitura, respeitado o piso")
+    @Test("pedir leitura agora provoca exatamente uma leitura, respeitado o piso")
     func refreshNowAsksForExactlyOneReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -195,7 +195,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 2)
     }
 
-    @Test("AC-28: recusa de credencial interrompe as leituras periódicas até ação do usuário")
+    @Test("recusa de credencial interrompe as leituras periódicas até ação do usuário")
     func refusalStopsPeriodicProbing() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.rejected(), CannedResponse.reading()])
         #expect(await harness.waitForState { $0.lastAttempt == .failed(.credentialRejected) })
@@ -212,7 +212,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.cycle != nil)
     }
 
-    @Test("AC-3: sem Claude Code descoberto, nenhuma leitura é realizada")
+    @Test("sem Claude Code descoberto, nenhuma leitura é realizada")
     func withoutClaudeCodeNothingIsRead() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
         #expect(await harness.waitForState { $0.lastAttempt == .failed(.claudeCodeNotFound) })
@@ -226,7 +226,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.source == nil)
     }
 
-    @Test("AC-49 de QB-APP-001: sem Claude Code, a pendência é publicada com a credencial configurada")
+    @Test("sem Claude Code, a pendência é publicada com a credencial configurada")
     func theClaudeCodePendencyIsPublished() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
         #expect(await harness.waitForState { $0.pendencies == [.claudeCode] })
@@ -237,7 +237,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 0)
     }
 
-    @Test("AC-51 de QB-APP-001: sem credencial e sem Claude Code, as duas pendências são publicadas juntas")
+    @Test("sem credencial e sem Claude Code, as duas pendências são publicadas juntas")
     func bothPendenciesArePublishedTogether() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -249,7 +249,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 0)
     }
 
-    @Test("AC-2: instalar o Claude Code em execução limpa a pendência e a leitura volta a acontecer")
+    @Test("instalar o Claude Code em execução limpa a pendência e a leitura volta a acontecer")
     func installingClaudeCodeClearsThePendency() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
         #expect(await harness.waitForState { $0.pendencies == [.claudeCode] })
@@ -263,7 +263,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.source == .primaryProbe)
     }
 
-    @Test("AC-12: sem credencial configurada, o estado não afirma cadência nem fonte")
+    @Test("sem credencial configurada, o estado não afirma cadência nem fonte")
     func withoutCredentialNothingIsAffirmed() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -301,7 +301,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.snapshot != nil)
     }
 
-    @Test("SEC REQ-7: gravada a credencial pela superfície, o pedido do usuário lê sem esperar o ciclo")
+    @Test("gravada a credencial pela superfície, o pedido do usuário lê sem esperar o ciclo")
     func savingTheCredentialProbesWithoutWaitingForTheNextCycle() async throws {
         let credentials = SwitchableCredentials()
         let harness = ProviderHarness(responses: [CannedResponse.reading()], credentials: credentials)
@@ -317,7 +317,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.cycle?.cadence.nature == .base)
     }
 
-    @Test("SEC REQ-15: falha de Keychain publica motivo próprio, distinto de recusa")
+    @Test("falha de Keychain publica motivo próprio, distinto de recusa")
     func keychainFailureHasItsOwnReason() async throws {
         let harness = ProviderHarness(
             responses: [CannedResponse.reading()],
@@ -328,7 +328,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 0)
     }
 
-    @Test("AC-22: estrangulamento sem dado é falha de comunicação e amplia a cadência")
+    @Test("estrangulamento sem dado é falha de comunicação e amplia a cadência")
     func throttlingWidensTheCadence() async throws {
         let harness = ProviderHarness(responses: [
             CannedResponse.reading(),
@@ -344,7 +344,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.cycle?.cadence.interval == .seconds(600))
     }
 
-    @Test("AC-21: cota esgotada com dado é leitura bem-sucedida e não amplia a cadência")
+    @Test("cota esgotada com dado é leitura bem-sucedida e não amplia a cadência")
     func exhaustedQuotaIsAReading() async throws {
         let harness = ProviderHarness(responses: [
             CannedResponse.reading(),
@@ -361,7 +361,7 @@ struct ProbingQuotaStateProviderTests {
         }
     }
 
-    @Test("ADR-005: suspensa a máquina no meio do preparo, a sonda é recusada e não conta como tentativa")
+    @Test("suspensa a máquina no meio do preparo, a sonda é recusada e não conta como tentativa")
     func aSuspensionWhilePreparingTheProbeRefusesIt() async throws {
         let credentials = GatedCredentials(blockingCall: 2)
         let harness = ProviderHarness(responses: [CannedResponse.reading()], credentials: credentials)
@@ -378,7 +378,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.latest?.lastAttempt == .inProgress)
     }
 
-    @Test("AC-20, AC-43 e AC-44: durante a espera, cinco minutos declaram adiamento e quatro não")
+    @Test("durante a espera, cinco minutos declaram adiamento e quatro não")
     func theConditionIsObservedDuringTheWaitAndNotAfterTheReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -396,7 +396,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(harness.transport.sentCount == 1)
     }
 
-    @Test("AC-37: nenhum estado publicado durante a suspensão e a retomada declara adiamento")
+    @Test("nenhum estado publicado durante a suspensão e a retomada declara adiamento")
     func sleepIsNeverPublishedAsDeferral() async throws {
         var afterTheSleep = UnifiedRateLimitHeaderFixture.complete
         afterTheSleep.fiveHourUtilization = "0.8125"
@@ -425,7 +425,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(natures.allSatisfy { $0 != .deferredBySystem })
     }
 
-    @Test("AC-38 e AC-52: depois da retomada, cinco minutos de espera voltam a ser adiamento e quatro não")
+    @Test("depois da retomada, cinco minutos de espera voltam a ser adiamento e quatro não")
     func deferralHoldsAgainAfterTheMachineWakesUp() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -451,7 +451,7 @@ struct ProbingQuotaStateProviderTests {
         )
     }
 
-    @Test("AC-39: leitura pontual sob ociosidade não vira adiamento quando o observador chega no fim do ciclo")
+    @Test("leitura pontual sob ociosidade não vira adiamento quando o observador chega no fim do ciclo")
     func aPunctualReadingIsNotDeferredAfterTheViewerRestoresTheBaseCadence() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
         #expect(await harness.waitForReading(sequence: 1))
@@ -487,7 +487,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(await harness.waitUntilStatesFinish())
     }
 
-    @Test("AC-7: janela limitante ausente é publicada como indisponível, nunca deduzida")
+    @Test("janela limitante ausente é publicada como indisponível, nunca deduzida")
     func absentFieldsArePublishedAsUnavailable() async throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.representativeClaim = nil
@@ -503,7 +503,7 @@ struct ProbingQuotaStateProviderTests {
         #expect(!state.unavailableFields.contains(.utilization(.fiveHour)))
     }
 
-    @Test("ADR-005: nenhuma sonda enquanto a máquina dorme; ao acordar volta ao ritmo base")
+    @Test("nenhuma sonda enquanto a máquina dorme; ao acordar volta ao ritmo base")
     func suspensionStopsProbingAndWakeResumesIt() async throws {
         let harness = ProviderHarness(responses: [
             CannedResponse.reading(),

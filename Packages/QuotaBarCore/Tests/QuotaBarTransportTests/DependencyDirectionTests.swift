@@ -35,14 +35,14 @@ private enum PackageLayout {
 struct DependencyDirectionTests {
     private static let domainTargets = ["QuotaBarCore", "QuotaBarCoreFixtures"]
 
-    @Test("AC-25: o manifesto do domínio não declara dependência do transporte", arguments: domainTargets)
+    @Test("o manifesto do domínio não declara dependência do transporte", arguments: domainTargets)
     func domainTargetDoesNotDependOnTransport(target: String) throws {
         let declaration = try #require(PackageLayout.targetDeclaration(named: target))
 
         #expect(!declaration.contains("QuotaBarTransport"))
     }
 
-    @Test("AC-25: nenhum arquivo do domínio menciona o módulo da credencial", arguments: domainTargets)
+    @Test("nenhum arquivo do domínio menciona o módulo da credencial", arguments: domainTargets)
     func noDomainSourceMentionsTransport(target: String) throws {
         let sources = PackageLayout.swiftSources(of: target)
         #expect(!sources.isEmpty, "nenhum arquivo encontrado em \(target)")
@@ -53,14 +53,14 @@ struct DependencyDirectionTests {
         }
     }
 
-    @Test("AC-25: a dependência existe no sentido oposto, do transporte para o domínio")
+    @Test("a dependência existe no sentido oposto, do transporte para o domínio")
     func transportDependsOnDomain() throws {
         let declaration = try #require(PackageLayout.targetDeclaration(named: "QuotaBarTransport"))
 
         #expect(declaration.contains("QuotaBarCore"))
     }
 
-    @Test("AC-25: nenhuma API pública do domínio recebe a credencial como parâmetro")
+    @Test("nenhuma API pública do domínio recebe a credencial como parâmetro")
     func noDomainAPITakesTheCredential() throws {
         for target in Self.domainTargets {
             for source in PackageLayout.swiftSources(of: target) {

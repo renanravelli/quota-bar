@@ -20,7 +20,7 @@ struct IndicatorSymbolTests {
         return DisplayValue(selection: .reportedByOrigin(.fiveHour), utilization: utilization, band: band)
     }
 
-    @Test("QB-APP-001 AC-12: as quatro faixas têm símbolos distintos, além de qualquer diferença de cor")
+    @Test("as quatro faixas têm símbolos distintos, além de qualquer diferença de cor")
     func bandsHaveDistinctSymbols() {
         for source in Self.sources {
             let names = Set(Self.bands.map { IndicatorSymbol.name(for: $0, source: source) })
@@ -28,7 +28,7 @@ struct IndicatorSymbolTests {
         }
     }
 
-    @Test("QB-APP-001 AC-39: para a mesma faixa, contingência e fonte primária têm símbolos distintos")
+    @Test("para a mesma faixa, contingência e fonte primária têm símbolos distintos")
     func sourceModeChangesTheSymbolForTheSameBand() {
         for band in Self.bands {
             let primary = IndicatorSymbol.name(for: band, source: .primaryProbe)
@@ -37,7 +37,7 @@ struct IndicatorSymbolTests {
         }
     }
 
-    @Test("QB-APP-001 AC-39: os dois eixos juntos produzem oito símbolos distintos")
+    @Test("os dois eixos juntos produzem oito símbolos distintos")
     func bandAndSourceTogetherAreInjective() {
         var names: Set<String> = []
         for band in Self.bands {
@@ -49,7 +49,7 @@ struct IndicatorSymbolTests {
         #expect(names.count == 8)
     }
 
-    @Test("QB-APP-001 AC-7, QB-APP-001 AC-8 e QB-APP-001 AC-9: os três estados sem valor têm símbolo próprio e distinto")
+    @Test("os três estados sem valor têm símbolo próprio e distinto")
     func statesWithoutValueHaveOwnSymbols() {
         let notConfigured = IndicatorSymbol.name(for: .notConfigured, source: .primaryProbe)
         let loading = IndicatorSymbol.name(for: .loading, source: .primaryProbe)
@@ -58,7 +58,7 @@ struct IndicatorSymbolTests {
         #expect(Set([notConfigured, loading, failed]).count == 3)
     }
 
-    @Test("QB-APP-001 AC-12: nenhum símbolo de estado sem valor colide com símbolo de faixa")
+    @Test("nenhum símbolo de estado sem valor colide com símbolo de faixa")
     func valuelessSymbolsNeverCollideWithBands() {
         var bandNames: Set<String> = []
         for band in Self.bands {
@@ -73,7 +73,7 @@ struct IndicatorSymbolTests {
         }
     }
 
-    @Test("QB-APP-001 AC-12: o símbolo dos estados com valor acompanha a faixa do valor exibido")
+    @Test("o símbolo dos estados com valor acompanha a faixa do valor exibido")
     func statesWithValueUseTheBandSymbol() {
         for band in Self.bands {
             let value = Self.displayValue(band)
@@ -86,7 +86,7 @@ struct IndicatorSymbolTests {
         }
     }
 
-    @Test("QB-APP-001 AC-1: todo símbolo usado existe no sistema, senão o item da barra fica vazio")
+    @Test("todo símbolo usado existe no sistema, senão o item da barra fica vazio")
     func everySymbolResolvesOnThisSystem() {
         var names: Set<String> = []
         for band in Self.bands {

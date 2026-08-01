@@ -66,7 +66,7 @@ private enum Reanchored {
 
 @Suite("Âncora do preenchimento da barra de cadência")
 struct CadenceAnchorTests {
-    @Test("QB-APP-002 REQ-11 e ADR-010: um ciclo reancorado sem leitura nova nasce vazio, e não saturado")
+    @Test("um ciclo reancorado sem leitura nova nasce vazio, e não saturado")
     func aCycleReanchoredWithoutANewReadingIsBornEmpty() throws {
         for path in Reanchored.withoutANewReading {
             var planner = Reanchored.plannerAfterAReading()
@@ -83,7 +83,7 @@ struct CadenceAnchorTests {
         }
     }
 
-    @Test("QB-APP-002 REQ-11: o instante publicado é o da próxima leitura, e a barra o acompanha até saturar")
+    @Test("o instante publicado é o da próxima leitura, e a barra o acompanha até saturar")
     func theBarFollowsThePublishedInstantUntilItSaturates() throws {
         var planner = Reanchored.plannerAfterAReading()
         planner.recordThrottling(retryAfter: .seconds(600), jitter: 0, at: Reanchored.readAt.addingTimeInterval(180))
@@ -96,7 +96,7 @@ struct CadenceAnchorTests {
         #expect(try #require(Reanchored.display(of: planner, at: expected.addingTimeInterval(600))).progress == 1)
     }
 
-    @Test("QB-APP-002 REQ-11: pedida a leitura agora, a barra afirma que o instante previsto chegou")
+    @Test("pedida a leitura agora, a barra afirma que o instante previsto chegou")
     func anImmediateReadRequestSaturatesTheBar() throws {
         var planner = Reanchored.plannerAfterAReading()
         let requestedAt = Reanchored.readAt.addingTimeInterval(90)
@@ -109,7 +109,7 @@ struct CadenceAnchorTests {
         #expect(try #require(Reanchored.display(of: planner, at: requestedAt)).progress == 1)
     }
 
-    @Test("QB-APP-002 REQ-11: depois de uma leitura nova o ciclo recomeça vazio")
+    @Test("depois de uma leitura nova o ciclo recomeça vazio")
     func aNewReadingStartsTheFillOver() throws {
         var planner = Reanchored.plannerAfterAReading()
         let secondReading = Reanchored.readAt.addingTimeInterval(180)

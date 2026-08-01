@@ -12,7 +12,7 @@ private func decimal(_ literal: String) -> Decimal {
 
 @Suite("Utilization — ponto fixo em basis points")
 struct UtilizationTests {
-    @Test("AC-3: 78,9% consumidos truncam para 78")
+    @Test("78,9% consumidos truncam para 78")
     func truncatesDownToWholePercent() {
         let utilization = Utilization(originPercent: decimal("78.9"))
 
@@ -20,7 +20,7 @@ struct UtilizationTests {
         #expect(utilization?.truncatedPercent == 78)
     }
 
-    @Test("AC-3: fração da sonda é convertida sem ponto flutuante")
+    @Test("fração da sonda é convertida sem ponto flutuante")
     func acceptsOriginFraction() {
         let utilization = Utilization(originFraction: "0.789")
 
@@ -28,7 +28,7 @@ struct UtilizationTests {
         #expect(utilization?.truncatedPercent == 78)
     }
 
-    @Test("AC-3: percentual com uma casa da status line preserva a casa decimal")
+    @Test("percentual com uma casa da status line preserva a casa decimal")
     func acceptsOriginPercentWithOneDecimalPlace() {
         let utilization = Utilization(originPercent: decimal("23.5"))
 
@@ -36,20 +36,20 @@ struct UtilizationTests {
         #expect(utilization?.truncatedPercent == 23)
     }
 
-    @Test("AC-4: percentual negativo não é representável")
+    @Test("percentual negativo não é representável")
     func rejectsNegativeValues() {
         #expect(Utilization(originPercent: decimal("-0.1")) == nil)
         #expect(Utilization(originFraction: "-0.42") == nil)
         #expect(Utilization(basisPoints: -1) == nil)
     }
 
-    @Test("AC-4: fração ilegível não produz valor")
+    @Test("fração ilegível não produz valor")
     func rejectsUnparsableFraction() {
         #expect(Utilization(originFraction: "") == nil)
         #expect(Utilization(originFraction: "indisponível") == nil)
     }
 
-    @Test("AC-33: 50,4% e 50,6% são distintos e ambos truncam para 50")
+    @Test("50,4% e 50,6% são distintos e ambos truncam para 50")
     func comparesBeforeTruncation() {
         let fiveHour = Utilization(originPercent: decimal("50.4"))
         let sevenDay = Utilization(originPercent: decimal("50.6"))
@@ -60,7 +60,7 @@ struct UtilizationTests {
         #expect(sevenDay?.truncatedPercent == 50)
     }
 
-    @Test("AC-33: igualdade exata é igualdade inteira, sem erro de arredondamento")
+    @Test("igualdade exata é igualdade inteira, sem erro de arredondamento")
     func exactEqualityIsIntegerEquality() {
         let fiveHour = Utilization(originPercent: decimal("50.0"))
         let sevenDay = Utilization(originFraction: "0.50")
@@ -70,7 +70,7 @@ struct UtilizationTests {
         #expect(!(sevenDay! < fiveHour!))
     }
 
-    @Test("AC-15: 100% consumidos atingem o limite")
+    @Test("100% consumidos atingem o limite")
     func reachesLimitAtOneHundredPercent() {
         let utilization = Utilization(originPercent: decimal("100"))
 
@@ -79,7 +79,7 @@ struct UtilizationTests {
         #expect(utilization?.isAtOrAboveLimit == true)
     }
 
-    @Test("AC-16: 118% é representável e não é resposta inesperada")
+    @Test("118% é representável e não é resposta inesperada")
     func keepsOverageRepresentable() {
         let utilization = Utilization(originPercent: decimal("118"))
 
@@ -88,7 +88,7 @@ struct UtilizationTests {
         #expect(utilization?.isAtOrAboveLimit == true)
     }
 
-    @Test("AC-15: 99,99% ainda não atingiu o limite")
+    @Test("99,99% ainda não atingiu o limite")
     func staysBelowLimitJustUnderOneHundred() {
         let utilization = Utilization(originPercent: decimal("99.99"))
 
@@ -97,7 +97,7 @@ struct UtilizationTests {
         #expect(utilization?.isAtOrAboveLimit == false)
     }
 
-    @Test("AC-3: zero é valor válido e distinto de ausência")
+    @Test("zero é valor válido e distinto de ausência")
     func acceptsZero() {
         let utilization = Utilization(originPercent: .zero)
 
@@ -106,7 +106,7 @@ struct UtilizationTests {
         #expect(utilization?.isAtOrAboveLimit == false)
     }
 
-    @Test("AC-3: precisão abaixo do basis point é truncada, não arredondada")
+    @Test("precisão abaixo do basis point é truncada, não arredondada")
     func truncatesBelowBasisPointPrecision() {
         #expect(Utilization(originPercent: decimal("78.999"))?.basisPoints == 7899)
         #expect(Utilization(originFraction: "0.789999")?.basisPoints == 7899)

@@ -25,7 +25,7 @@ struct ProbeCredentialVerifierTests {
         try #require(SubscriptionToken(pasted: pasted))
     }
 
-    @Test("AC-10: só há sucesso quando a leitura real devolve dado de cota")
+    @Test("só há sucesso quando a leitura real devolve dado de cota")
     func aRealReadingIsWhatDeclaresSuccess() async throws {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -35,7 +35,7 @@ struct ProbeCredentialVerifierTests {
         #expect(transport.sentCount == 1)
     }
 
-    @Test("AC-11: recusa e expiração são classificadas por evidência e não gravam")
+    @Test("recusa e expiração são classificadas por evidência e não gravam")
     func refusalAndExpirationAreClassifiedFromEvidence() async throws {
         let refused = RecordingTransport([CannedResponse.rejected()])
         let expired = RecordingTransport([CannedResponse.rejected(ProbeResponseFixture.ErrorBody.expiredCredential)])
@@ -49,7 +49,7 @@ struct ProbeCredentialVerifierTests {
         #expect(!expiration.shouldPersist)
     }
 
-    @Test("AC-12: bloqueio por política exige evidência positiva, e grava")
+    @Test("bloqueio por política exige evidência positiva, e grava")
     func policyBlockRequiresPositiveEvidence() async throws {
         let transport = RecordingTransport([
             ProbeHTTPResponse(status: 403, headers: [:], body: ProbeResponseFixture.ErrorBody.policyRestriction)
@@ -61,7 +61,7 @@ struct ProbeCredentialVerifierTests {
         #expect(outcome.shouldPersist)
     }
 
-    @Test("AC-13: transporte indisponível é falha de comunicação, e grava")
+    @Test("transporte indisponível é falha de comunicação, e grava")
     func anUnreachableOriginIsACommunicationFailure() async throws {
         let transport = RecordingTransport(failing: true)
 
@@ -71,7 +71,7 @@ struct ProbeCredentialVerifierTests {
         #expect(outcome.shouldPersist)
     }
 
-    @Test("AC-28: resposta sem nenhuma utilização é resposta inesperada, e não grava")
+    @Test("resposta sem nenhuma utilização é resposta inesperada, e não grava")
     func aResponseWithoutUtilizationsIsUnexpected() async throws {
         let transport = RecordingTransport([
             ProbeHTTPResponse(status: 200, headers: [:], body: Data(#"{"id":"msg_1"}"#.utf8))
@@ -83,7 +83,7 @@ struct ProbeCredentialVerifierTests {
         #expect(!outcome.shouldPersist)
     }
 
-    @Test("AC-14: sem Claude Code a verificação não acontece, e nenhuma requisição é feita")
+    @Test("sem Claude Code a verificação não acontece, e nenhuma requisição é feita")
     func withoutClaudeCodeNothingIsRequested() async throws {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -93,7 +93,7 @@ struct ProbeCredentialVerifierTests {
         #expect(transport.sentCount == 0)
     }
 
-    @Test("REQ-7 e REQ-11: verifica-se o valor em mãos, sem passar pelo armazenamento")
+    @Test("verifica-se o valor em mãos, sem passar pelo armazenamento")
     func theValueInHandIsWhatGetsVerified() async throws {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -103,7 +103,7 @@ struct ProbeCredentialVerifierTests {
         #expect(transport.sent.first?.headers["authorization"] == "Bearer \(Self.pasted)")
     }
 
-    @Test("REQ-1: a versão descoberta é reaproveitada entre verificações")
+    @Test("a versão descoberta é reaproveitada entre verificações")
     func theDiscoveredVersionIsReused() async throws {
         let environment = CountingClaudeCode()
         let transport = RecordingTransport([CannedResponse.reading()])

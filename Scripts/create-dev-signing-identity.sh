@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Certificado autoassinado estável para desenvolvimento (ADR-006, emenda de 2026-08-01).
+# Certificado autoassinado estável para desenvolvimento.
 #
 # A ACL de um item de Keychain é amarrada ao Designated Requirement do processo
 # que gravou. Assinatura ad-hoc muda o hash a cada recompilação, invalidando a

@@ -19,7 +19,7 @@ struct UnifiedRateLimitHeadersTests {
         )
     }
 
-    @Test("AC-5: conjunto completo produz leitura completa")
+    @Test("conjunto completo produz leitura completa")
     func completeHeaderSetProducesEveryValue() throws {
         let snapshot = try #require(Self.snapshot(.complete, readSequence: 7))
 
@@ -40,7 +40,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.source == .primaryProbe)
     }
 
-    @Test("AC-5: a janela semanal também é mapeada quando é ela que limita")
+    @Test("a janela semanal também é mapeada quando é ela que limita")
     func sevenDayIsMappedAsBindingWindow() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.representativeClaim = "seven_day"
@@ -50,7 +50,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.bindingWindow == .window(.sevenDay))
     }
 
-    @Test("AC-6: cabeçalho ausente vira indisponível, não zero")
+    @Test("cabeçalho ausente vira indisponível, não zero")
     func missingHeaderBecomesUnavailable() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.sevenDayReset = nil
@@ -65,7 +65,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.overage.status == nil)
     }
 
-    @Test("AC-7: a janela limitante nunca é deduzida")
+    @Test("a janela limitante nunca é deduzida")
     func bindingWindowIsNeverInferred() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.representativeClaim = nil
@@ -79,7 +79,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.sevenDay.utilization == Utilization(basisPoints: 9_000))
     }
 
-    @Test("AC-8: sem nenhuma utilização não há leitura")
+    @Test("sem nenhuma utilização não há leitura")
     func readingWithoutAnyUtilizationIsInvalid() {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.fiveHourUtilization = nil
@@ -88,7 +88,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(Self.snapshot(fixture) == nil)
     }
 
-    @Test("AC-8: uma utilização basta para a leitura valer")
+    @Test("uma utilização basta para a leitura valer")
     func oneUtilizationIsEnough() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.sevenDayUtilization = nil
@@ -99,7 +99,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.sevenDay.utilization == nil)
     }
 
-    @Test("AC-9: valor desconhecido em campo enumerado é preservado")
+    @Test("valor desconhecido em campo enumerado é preservado")
     func unknownEnumeratedValueIsPreserved() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.fiveHourStatus = "throttled_soft"
@@ -114,7 +114,7 @@ struct UnifiedRateLimitHeadersTests {
     }
 
     @Test(
-        "AC-6: utilização ilegível ou fora de faixa fica indisponível",
+        "utilização ilegível ou fora de faixa fica indisponível",
         arguments: ["", "   ", "abc", "0x10", "1,5", "0.5abc", "-0.1", "1e2", "NaN", "０.５"]
     )
     func unreadableUtilizationNeverBecomesZero(raw: String) throws {
@@ -127,7 +127,7 @@ struct UnifiedRateLimitHeadersTests {
     }
 
     @Test(
-        "AC-6: instante de reset ilegível ou fora de faixa fica indisponível",
+        "instante de reset ilegível ou fora de faixa fica indisponível",
         arguments: ["", "later", "-5", "0", "1700003600.5", "17e8", "99999999999999999999"]
     )
     func unreadableResetNeverBecomesEpochZero(raw: String) throws {
@@ -139,7 +139,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.fiveHour.resetsAt == nil)
     }
 
-    @Test("AC-5: a aritmética é em pontos-base, sem ponto flutuante")
+    @Test("a aritmética é em pontos-base, sem ponto flutuante")
     func utilizationIsFixedPoint() throws {
         var fixture = UnifiedRateLimitHeaderFixture.complete
         fixture.fiveHourUtilization = "1.18"
@@ -152,7 +152,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(utilization.isAtOrAboveLimit)
     }
 
-    @Test("AC-21: cota esgotada chega como leitura, com utilização no limite")
+    @Test("cota esgotada chega como leitura, com utilização no limite")
     func exhaustedHeadersStillProduceAReading() throws {
         let snapshot = try #require(Self.snapshot(.exhausted))
 
@@ -161,7 +161,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.overallStatus == .rejected)
     }
 
-    @Test("AC-5: o nome do cabeçalho é lido sem depender de caixa nem de espaço em volta")
+    @Test("o nome do cabeçalho é lido sem depender de caixa nem de espaço em volta")
     func headerNamesAreCaseInsensitiveAndValuesAreTrimmed() throws {
         let uppercased = Dictionary(
             uniqueKeysWithValues: UnifiedRateLimitHeaderFixture.complete.headers.map {
@@ -178,7 +178,7 @@ struct UnifiedRateLimitHeadersTests {
         #expect(snapshot.bindingWindow == .window(.fiveHour))
     }
 
-    @Test("AC-10: cabeçalhos idênticos em leituras distintas produzem identidades distintas")
+    @Test("cabeçalhos idênticos em leituras distintas produzem identidades distintas")
     func identicalHeadersKeepDistinctIdentities() throws {
         let first = try #require(Self.snapshot(.complete, readSequence: 1))
         let second = try #require(Self.snapshot(.complete, readSequence: 2))

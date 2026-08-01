@@ -13,7 +13,7 @@ struct ProbeScheduleTests {
         lastProbe.addingTimeInterval(value * 60)
     }
 
-    @Test("AC-17: observador entrando tarde não antecipa a leitura agendada")
+    @Test("o cálculo de reagendamento não antecipa a leitura agendada para observador que chega tarde")
     func lateViewerDoesNotAdvanceTheProbe() {
         let arrival = Self.minute(14)
 
@@ -28,7 +28,7 @@ struct ProbeScheduleTests {
         #expect(next > arrival)
     }
 
-    @Test("AC-18: observador entrando cedo acelera até o piso, e não além")
+    @Test("observador entrando cedo acelera até o piso, e não além")
     func earlyViewerAcceleratesWithinTheFloor() {
         let next = ProbeSchedule.next(
             scheduled: Self.minute(15),
@@ -41,7 +41,7 @@ struct ProbeScheduleTests {
         #expect(next >= Self.lastProbe.addingTimeInterval(60))
     }
 
-    @Test("AC-18: o piso desde a última leitura vence um agendamento mais próximo")
+    @Test("o piso desde a última leitura vence um agendamento mais próximo")
     func floorSinceLastProbeWins() {
         let next = ProbeSchedule.next(
             scheduled: Self.lastProbe.addingTimeInterval(10),
@@ -53,7 +53,7 @@ struct ProbeScheduleTests {
         #expect(next == Self.lastProbe.addingTimeInterval(60))
     }
 
-    @Test("AC-19: entrar e sair dez vezes não move o instante nem acumula leituras")
+    @Test("entrar e sair dez vezes não move o instante nem acumula leituras")
     func repeatedObservationNeverAmplifies() {
         var scheduled = Self.minute(4)
         var instants: [Date] = []
@@ -86,7 +86,7 @@ struct ProbeScheduleTests {
         #expect(probesDue == 0)
     }
 
-    @Test("AC-11: alargar a cadência não empurra uma leitura já agendada para depois")
+    @Test("alargar a cadência não empurra uma leitura já agendada para depois")
     func wideningNeverPostponesAScheduledProbe() {
         let next = ProbeSchedule.next(
             scheduled: Self.minute(3),
@@ -98,7 +98,7 @@ struct ProbeScheduleTests {
         #expect(next == Self.minute(3))
     }
 
-    @Test("AC-17: sem leitura agendada, o instante nasce da cadência corrente")
+    @Test("sem leitura agendada, o instante nasce da cadência corrente")
     func firstScheduleComesFromTheCurrentCadence() {
         let next = ProbeSchedule.next(
             scheduled: nil,

@@ -23,14 +23,14 @@ struct DeferralScheduleTests {
         )
     }
 
-    @Test("AC-45: o próximo limiar é o prazo publicado do ciclo")
+    @Test("o próximo limiar é o prazo publicado do ciclo")
     func theNextThresholdIsThePublishedDeadline() {
         let deadline = Self.readAt.addingTimeInterval(270)
 
         #expect(DeferralSchedule.nextThreshold(for: Self.state(deadline: deadline), now: Self.readAt) == deadline)
     }
 
-    @Test("AC-45: depois de vencido, o prazo não é mais um limiar a esperar")
+    @Test("depois de vencido, o prazo não é mais um limiar a esperar")
     func aPassedDeadlineIsNoLongerAThreshold() {
         let deadline = Self.readAt.addingTimeInterval(270)
         let state = Self.state(deadline: deadline)
@@ -39,12 +39,12 @@ struct DeferralScheduleTests {
         #expect(DeferralSchedule.nextThreshold(for: state, now: deadline.addingTimeInterval(1)) == nil)
     }
 
-    @Test("AC-41: sem ciclo agendado não há limiar a esperar")
+    @Test("sem ciclo agendado não há limiar a esperar")
     func noCycleMeansNoThreshold() {
         #expect(DeferralSchedule.nextThreshold(for: Self.state(deadline: nil), now: Self.readAt) == nil)
     }
 
-    @Test("AC-45: o limiar é lido do prazo publicado, não recalculado do intervalo")
+    @Test("o limiar é lido do prazo publicado, não recalculado do intervalo")
     func theThresholdComesFromThePublishedDeadlineAlone() {
         let farDeadline = Self.readAt.addingTimeInterval(86_400)
 

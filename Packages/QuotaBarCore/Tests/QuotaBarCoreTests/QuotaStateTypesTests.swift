@@ -13,13 +13,13 @@ struct QuotaStateTypesTests {
         )
     }
 
-    @Test("AC-48: só a fonte primária exige credencial")
+    @Test("só a fonte primária exige credencial")
     func onlyPrimarySourceRequiresCredential() {
         #expect(QuotaSource.primaryProbe.requiresCredential)
         #expect(!QuotaSource.contingencyStatusLine.requiresCredential)
     }
 
-    @Test("AC-37: cadência abaixo do piso de 60 segundos não é construível")
+    @Test("cadência abaixo do piso de 60 segundos não é construível")
     func cadenceRefusesIntervalBelowFloor() {
         #expect(Cadence(interval: .seconds(59), nature: .base) == nil)
         #expect(Cadence(interval: .seconds(1), nature: .idle) == nil)
@@ -27,7 +27,7 @@ struct QuotaStateTypesTests {
         #expect(Cadence(interval: .seconds(-60), nature: .base) == nil)
     }
 
-    @Test("AC-37: o piso de 60 segundos é aceito, e a ociosidade no teto também")
+    @Test("o piso de 60 segundos é aceito, e a ociosidade no teto também")
     func cadenceAcceptsFloorAndIdleCeiling() {
         #expect(Cadence(interval: .seconds(60), nature: .base)?.interval == .seconds(60))
         #expect(Cadence(interval: .seconds(900), nature: .idle)?.nature == .idle)
@@ -35,7 +35,7 @@ struct QuotaStateTypesTests {
         #expect(Cadence.floor == .seconds(60))
     }
 
-    @Test("AC-32: status desconhecido preserva o valor original em vez de derrubar a leitura")
+    @Test("status desconhecido preserva o valor original em vez de derrubar a leitura")
     func unknownStatusKeepsOriginalValue() {
         let status = WindowStatus.unknown("allowed_with_grace")
 
@@ -44,7 +44,7 @@ struct QuotaStateTypesTests {
         #expect(status != .allowed)
     }
 
-    @Test("AC-31: janela limitante ausente permanece ausente, mesmo com as duas janelas disponíveis")
+    @Test("janela limitante ausente permanece ausente, mesmo com as duas janelas disponíveis")
     func absentBindingWindowIsNotDerived() throws {
         let snapshot = try #require(QuotaSnapshot(
             fiveHour: Self.reading(percent: "31"),
@@ -64,7 +64,7 @@ struct QuotaStateTypesTests {
         #expect(snapshot.sevenDay.utilization != nil)
     }
 
-    @Test("AC-7: estado sem credencial, sem leitura e sem tentativa concluída ainda carrega uma tentativa")
+    @Test("estado sem credencial, sem leitura e sem tentativa concluída ainda carrega uma tentativa")
     func attemptOutcomeIsNeverAbsent() {
         let state = QuotaState(
             credentialPresent: false,
@@ -79,7 +79,7 @@ struct QuotaStateTypesTests {
         #expect(state.unavailableFields.isEmpty)
     }
 
-    @Test("AC-42: campo não fornecido é declarado ausente, não preenchido")
+    @Test("campo não fornecido é declarado ausente, não preenchido")
     func unavailableFieldsRecordAbsenceInsteadOfDefaults() throws {
         let sevenDay = WindowReading(utilization: Utilization(basisPoints: 4_100), resetsAt: nil, status: .allowed)
         let snapshot = try #require(QuotaSnapshot(
@@ -110,7 +110,7 @@ struct QuotaStateTypesTests {
         #expect(!state.unavailableFields.contains(.resetAt(.fiveHour)))
     }
 
-    @Test("AC-9: tentativa bem-sucedida sem leitura é incoerência recusada na construção")
+    @Test("tentativa bem-sucedida sem leitura é incoerência recusada na construção")
     func succeededWithoutSnapshotIsNotConstructible() async {
         await #expect(processExitsWith: .failure) {
             _ = QuotaState(
@@ -124,7 +124,7 @@ struct QuotaStateTypesTests {
         }
     }
 
-    @Test("AC-8: tentativa em andamento sem leitura continua construível")
+    @Test("tentativa em andamento sem leitura continua construível")
     func inProgressWithoutSnapshotStaysConstructible() {
         let state = QuotaState(
             credentialPresent: true,
@@ -138,7 +138,7 @@ struct QuotaStateTypesTests {
         #expect(state.snapshot == nil)
     }
 
-    @Test("AC-9 e AC-49: os sete motivos de falha são distintos entre si")
+    @Test("os sete motivos de falha são distintos entre si")
     func failureReasonsAreDistinct() {
         #expect(Set(FailureReason.allCases).count == 7)
         #expect(FailureReason.allCases.contains(.claudeCodeNotFound))
@@ -156,24 +156,24 @@ struct QuotaStateTypesTests {
         )
     }
 
-    @Test("AC-51: as duas pendências coexistem, sem que uma dependa da outra")
+    @Test("as duas pendências coexistem, sem que uma dependa da outra")
     func bothPendenciesCoexist() {
         #expect(Self.awaiting(credential: true, claudeCode: true).pendencies == [.credential, .claudeCode])
     }
 
-    @Test("AC-49 e AC-51: cada pendência é declarada sozinha quando é a única")
+    @Test("cada pendência é declarada sozinha quando é a única")
     func eachPendencyStandsAlone() {
         #expect(Self.awaiting(credential: false, claudeCode: true).pendencies == [.claudeCode])
         #expect(Self.awaiting(credential: true, claudeCode: false).pendencies == [.credential])
     }
 
-    @Test("REQ-19: sem pendência alguma, nenhuma é declarada")
+    @Test("sem pendência alguma, nenhuma é declarada")
     func noPendencyIsInvented() {
         #expect(Self.awaiting(credential: false, claudeCode: false).pendencies.isEmpty)
         #expect(ConfigurationPendency.allCases.count == 2)
     }
 
-    @Test("AC-7: o estado inicial do aplicativo é o de credencial não configurada, sem afirmar cadência nem fonte")
+    @Test("o estado inicial do aplicativo é o de credencial não configurada, sem afirmar cadência nem fonte")
     func theInitialStateAffirmsNothingItDoesNotKnow() {
         var latch = StaleLatch()
         let state = QuotaState.unconfigured

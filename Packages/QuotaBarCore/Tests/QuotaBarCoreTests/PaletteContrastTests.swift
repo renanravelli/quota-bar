@@ -8,7 +8,7 @@ struct PaletteContrastTests {
         Utilization(basisPoints: value * 100)!
     }
 
-    @Test("AC-1: a paleta corresponde exatamente aos valores da spec")
+    @Test("a paleta corresponde exatamente aos valores da spec")
     func paletteMatchesTheSpecifiedValues() {
         #expect(Palette.background.hexString == "#0F0F12")
         #expect(Palette.surface.hexString == "#1A1A20")
@@ -25,7 +25,7 @@ struct PaletteContrastTests {
         #expect(Palette.bad.hexString == "#F87171")
     }
 
-    @Test("AC-1: as cores estruturais não estão no conjunto de cores de texto")
+    @Test("as cores estruturais não estão no conjunto de cores de texto")
     func structuralColoursAreNotTextColours() {
         for forbidden in Palette.forbiddenAsTextColor {
             #expect(!Palette.textColors.contains(forbidden), "\(forbidden.hexString) não pode carregar texto")
@@ -34,14 +34,14 @@ struct PaletteContrastTests {
         #expect(Palette.forbiddenAsTextColor.contains(Palette.track))
     }
 
-    @Test("AC-1: track continua válida como superfície sob texto")
+    @Test("track continua válida como superfície sob texto")
     func trackRemainsValidAsASurface() {
         #expect(Palette.surfaces.contains(Palette.track))
         #expect(Contrast.ratio(Palette.text, Palette.track) >= Contrast.minimumRatio)
         #expect(Contrast.ratio(Palette.textMuted, Palette.track) >= Contrast.minimumRatio)
     }
 
-    @Test("AC-1: as margens de contraste registradas na spec conferem")
+    @Test("as margens de contraste registradas na spec conferem")
     func recordedContrastMarginsHold() {
         #expect(abs(Contrast.ratio(Palette.structuralWeak, Palette.surface) - 2.63) < 0.01)
         #expect(abs(Contrast.ratio(Palette.text, Palette.track) - 13.19) < 0.01)
@@ -49,12 +49,12 @@ struct PaletteContrastTests {
         #expect(abs(Contrast.ratio(Palette.textMuted, Palette.surfaceSecondary) - 4.63) < 0.01)
     }
 
-    @Test("AC-1: structuralWeak como cor de texto reprovaria, e é por isso que é proibida")
+    @Test("structuralWeak como cor de texto reprovaria, e é por isso que é proibida")
     func structuralWeakWouldFailAsTextColour() {
         #expect(Contrast.ratio(Palette.structuralWeak, Palette.surface) < Contrast.minimumRatio)
     }
 
-    @Test("AC-30: todo par de cor de texto e superfície da paleta alcança 4,5:1")
+    @Test("todo par de cor de texto e superfície da paleta alcança 4,5:1")
     func everyTextAndSurfacePairMeetsTheMinimum() {
         for textColor in Palette.textColors {
             for surface in Palette.surfaces {
@@ -67,7 +67,7 @@ struct PaletteContrastTests {
         }
     }
 
-    @Test("AC-30: o percentual tingido pelo gradiente alcança 4,5:1 em passos de 5 pontos")
+    @Test("o percentual tingido pelo gradiente alcança 4,5:1 em passos de 5 pontos")
     func gradientTintedTextMeetsTheMinimumAcrossItsRange() {
         var worstRatio = Double.greatestFiniteMagnitude
         var worstPercent = 0
@@ -87,7 +87,7 @@ struct PaletteContrastTests {
         #expect(abs(worstRatio - 6.26) < 0.01, "pior ponto do gradiente registrado: \(worstRatio)")
     }
 
-    @Test("AC-30: o pior ponto do contínuo não é interior — varredura fina confirma o extremo")
+    @Test("o pior ponto do contínuo não é interior — varredura fina confirma o extremo")
     func theWorstGradientPointIsAtTheEndOfTheRange() {
         var worstRatio = Double.greatestFiniteMagnitude
 
@@ -99,7 +99,7 @@ struct PaletteContrastTests {
         #expect(abs(worstRatio - 6.26) < 0.01)
     }
 
-    @Test("AC-30: a fórmula de contraste é a da WCAG, conferida contra valores conhecidos")
+    @Test("a fórmula de contraste é a da WCAG, conferida contra valores conhecidos")
     func contrastFormulaMatchesKnownValues() {
         let white = RGBColor(hex: "#FFFFFF")!
         let black = RGBColor(hex: "#000000")!
@@ -110,7 +110,7 @@ struct PaletteContrastTests {
         #expect(abs(Contrast.relativeLuminance(black)) < 0.001)
     }
 
-    @Test("AC-1: hexadecimal inválido não produz cor")
+    @Test("hexadecimal inválido não produz cor")
     func invalidHexIsRejected() {
         #expect(RGBColor(hex: "") == nil)
         #expect(RGBColor(hex: "#FFF") == nil)

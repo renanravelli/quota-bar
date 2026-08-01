@@ -12,7 +12,7 @@ struct ReadSequenceCounterTests {
         UnifiedRateLimitHeaderFixture.complete.headers
     }
 
-    @Test("AC-10: leituras consecutivas de conteúdo idêntico recebem sequências distintas")
+    @Test("leituras consecutivas de conteúdo idêntico recebem sequências distintas")
     func consecutiveReadingsGetDistinctSequences() throws {
         var counter = ReadSequenceCounter()
 
@@ -29,7 +29,7 @@ struct ReadSequenceCounterTests {
         #expect(one.fiveHour.utilization == two.fiveHour.utilization)
     }
 
-    @Test("Contratos §5: resultado que não é leitura não consome a sequência candidata")
+    @Test("resultado que não é leitura não consome a sequência candidata")
     func onlyReadingsConsumeTheCandidate() {
         var counter = ReadSequenceCounter()
 
@@ -41,7 +41,7 @@ struct ReadSequenceCounterTests {
         #expect(counter.candidate == 1)
     }
 
-    @Test("Contratos §5: numa sequência em que só a terceira é leitura, o snapshot carrega a primeira candidata")
+    @Test("o contador entrega a primeira candidata à única leitura de três respostas e mantém a próxima reservada")
     func theThirdResponseCarriesTheFirstCandidate() {
         var counter = ReadSequenceCounter()
 
@@ -58,7 +58,7 @@ struct ReadSequenceCounterTests {
         #expect(counter.candidate == 2)
     }
 
-    @Test("AC-21: cota esgotada com cabeçalhos é leitura e consome a sequência")
+    @Test("cota esgotada com cabeçalhos é leitura e consome a sequência")
     func exhaustedQuotaWithHeadersIsAReading() {
         var counter = ReadSequenceCounter()
 

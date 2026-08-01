@@ -4,7 +4,7 @@ import Testing
 import QuotaBarCoreFixtures
 @testable import QuotaBarCore
 
-@Suite("QB-API-001 — classificação da resposta")
+@Suite("Classificação da resposta")
 struct ResponseClassifierTests {
     private static let readSequence: UInt64 = 7
     private static let readAt = Date(timeIntervalSince1970: 1_700_000_000)
@@ -49,7 +49,7 @@ struct ResponseClassifierTests {
         return reason
     }
 
-    @Test("AC-21: 429 com cabeçalhos unified é leitura bem-sucedida, não estrangulamento")
+    @Test("429 com cabeçalhos unified é leitura bem-sucedida, não estrangulamento")
     func exhaustedQuotaWithHeadersIsAReading() throws {
         let result = Self.classify(status: 429, headers: UnifiedRateLimitHeaderFixture.exhausted.headers)
 
@@ -59,7 +59,7 @@ struct ResponseClassifierTests {
         #expect(snapshot.sevenDay.utilization != nil)
     }
 
-    @Test("AC-21: resposta bem-sucedida com cabeçalhos unified é leitura, com a identidade recebida")
+    @Test("resposta bem-sucedida com cabeçalhos unified é leitura, com a identidade recebida")
     func successWithHeadersIsAReading() throws {
         let result = Self.classify(status: 200, headers: UnifiedRateLimitHeaderFixture.complete.headers)
 
@@ -71,7 +71,7 @@ struct ResponseClassifierTests {
         #expect(snapshot.readAt == Self.readAt)
     }
 
-    @Test("AC-21: uma única janela presente ainda é leitura")
+    @Test("uma única janela presente ainda é leitura")
     func singleWindowIsStillAReading() throws {
         let result = Self.classify(status: 200, headers: Self.fiveHourOnly)
 
@@ -80,7 +80,7 @@ struct ResponseClassifierTests {
         #expect(snapshot.sevenDay.utilization == nil)
     }
 
-    @Test("AC-22: 429 sem cabeçalhos unified é estrangulamento de transporte")
+    @Test("429 sem cabeçalhos unified é estrangulamento de transporte")
     func throttlingWithoutHeadersIsNotAReading() {
         let result = Self.classify(status: 429, headers: ProbeResponseFixture.Headers.absent)
 
@@ -88,14 +88,14 @@ struct ResponseClassifierTests {
         #expect(Self.snapshot(in: result) == nil)
     }
 
-    @Test("AC-22: 429 com cabeçalhos unified sem utilização é estrangulamento, não leitura de zeros")
+    @Test("429 com cabeçalhos unified sem utilização é estrangulamento, não leitura de zeros")
     func throttlingWithHeadersButNoUtilizationIsNotAReading() {
         let result = Self.classify(status: 429, headers: Self.withoutUtilizations)
 
         #expect(result == .throttled(retryAfter: nil))
     }
 
-    @Test("AC-22: Retry-After é lido sem depender da caixa do cabeçalho, e só em segundos")
+    @Test("Retry-After é lido sem depender da caixa do cabeçalho, e só em segundos")
     func retryAfterIsHonoredCaseInsensitively() {
         #expect(
             Self.classify(status: 429, headers: ProbeResponseFixture.Headers.retryAfter(seconds: 30))
@@ -111,7 +111,7 @@ struct ResponseClassifierTests {
         )
     }
 
-    @Test("AC-22: falha do lado da origem é estrangulamento")
+    @Test("falha do lado da origem é estrangulamento")
     func serverFailureIsThrottling() {
         #expect(Self.classify(status: 500) == .throttled(retryAfter: nil))
         #expect(
@@ -121,7 +121,7 @@ struct ResponseClassifierTests {
         #expect(Self.classify(status: 599) == .throttled(retryAfter: nil))
     }
 
-    @Test("AC-8: as duas utilizações ausentes produzem resposta inesperada, nunca um estado com zeros")
+    @Test("as duas utilizações ausentes produzem resposta inesperada, nunca um estado com zeros")
     func bothUtilizationsAbsentIsUnexpectedResponse() {
         let withOtherHeaders = Self.classify(status: 200, headers: Self.withoutUtilizations)
         let withoutAnyHeader = Self.classify(status: 200, headers: ProbeResponseFixture.Headers.absent)
@@ -132,7 +132,7 @@ struct ResponseClassifierTests {
         #expect(Self.snapshot(in: withoutAnyHeader) == nil)
     }
 
-    @Test("AC-24: bloqueio por política exige evidência positiva no corpo")
+    @Test("bloqueio por política exige evidência positiva no corpo")
     func policyBlockRequiresPositiveEvidence() {
         let withEvidence = Self.classify(status: 403, errorBody: ProbeResponseFixture.ErrorBody.policyRestriction)
         let unrecognized = Self.classify(status: 403, errorBody: ProbeResponseFixture.ErrorBody.unrecognized)
@@ -145,7 +145,7 @@ struct ResponseClassifierTests {
         #expect(unexpectedShape == .failed(.credentialRejected))
     }
 
-    @Test("AC-24: corpo ausente ou ilegível é credencial recusada, em nenhuma hipótese bloqueio por política")
+    @Test("corpo ausente ou ilegível é credencial recusada, em nenhuma hipótese bloqueio por política")
     func unreadableBodyNeverBecomesPolicyBlock() {
         let bodies: [Data?] = [
             nil,
@@ -166,7 +166,7 @@ struct ResponseClassifierTests {
         }
     }
 
-    @Test("AC-25: recusa sem evidência de expiração é recusa; com evidência é expiração")
+    @Test("recusa sem evidência de expiração é recusa; com evidência é expiração")
     func expirationRequiresEvidence() {
         #expect(
             Self.classify(status: 401, errorBody: ProbeResponseFixture.ErrorBody.unrecognized)
@@ -182,7 +182,7 @@ struct ResponseClassifierTests {
         )
     }
 
-    @Test("AC-23: cada resposta preparada produz exatamente um motivo, e os motivos são distinguíveis")
+    @Test("cada resposta preparada produz exatamente um motivo, e os motivos são distinguíveis")
     func eachResponseProducesExactlyOneReason() {
         let classified: [ProbeResult] = [
             Self.classify(status: 401, errorBody: ProbeResponseFixture.ErrorBody.unrecognized),
@@ -203,14 +203,14 @@ struct ResponseClassifierTests {
         )
     }
 
-    @Test("AC-23: 4xx que não é 401, 403 nem 429 é resposta inesperada")
+    @Test("4xx que não é 401, 403 nem 429 é resposta inesperada")
     func otherClientErrorsAreUnexpectedResponses() {
         #expect(Self.classify(status: 400) == .failed(.unexpectedResponse))
         #expect(Self.classify(status: 404) == .failed(.unexpectedResponse))
         #expect(Self.classify(status: 302) == .failed(.unexpectedResponse))
     }
 
-    @Test("AC-27: em resposta bem-sucedida o corpo não é interpretado")
+    @Test("em resposta bem-sucedida o corpo não é interpretado")
     func successNeverInspectsTheBody() throws {
         let reading = Self.classify(
             status: 200,
@@ -227,7 +227,7 @@ struct ResponseClassifierTests {
         #expect(withoutHeaders == .failed(.unexpectedResponse))
     }
 
-    @Test("AC-26: o corpo de erro não sobrevive à classificação")
+    @Test("o corpo de erro não sobrevive à classificação")
     func errorBodyDoesNotSurviveClassification() {
         let result = Self.classify(
             status: 403,

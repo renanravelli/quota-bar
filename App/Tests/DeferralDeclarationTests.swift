@@ -11,7 +11,7 @@ struct DeferralDeclarationTests {
         "Atualização adiada pelo sistema — o intervalo pretendido é a cada 3 minutos."
     private static let baseLine = "Atualizando a cada 3 minutos — ritmo base."
 
-    @Test("QB-APP-001 AC-52: cinco minutos depois do agendamento, a linha declara o atraso em curso")
+    @Test("cinco minutos depois do agendamento, a linha declara o atraso em curso")
     func theCadenceLineDeclaresTheDelayInProgress() {
         let presenter = Journey.openPanel(over: Journey.state())
         let content = presenter.panelContent(at: Journey.readAt.addingTimeInterval(300))
@@ -20,7 +20,7 @@ struct DeferralDeclarationTests {
         #expect(content.cadenceLine?.contains("ritmo base") == false)
     }
 
-    @Test("QB-APP-001 AC-52: o painel usa o prazo fornecido e não recalcula o limiar")
+    @Test("o painel usa o prazo fornecido e não recalcula o limiar")
     func thePanelDoesNotRecomputeTheThreshold() {
         let observed = Journey.readAt.addingTimeInterval(300)
         let published = Journey.openPanel(over: Journey.state()).panelContent(at: observed)
@@ -35,7 +35,7 @@ struct DeferralDeclarationTests {
         )
     }
 
-    @Test("QB-APP-001 AC-54: depois de acordar, a linha declara ritmo base e o período aparece como idade")
+    @Test("depois de acordar, a linha declara ritmo base e o período aparece como idade")
     func wakingUpDoesNotDeclareDeferral() {
         let resumedAt = Journey.readAt.addingTimeInterval(8 * 3_600)
         let state = Journey.state(deferralDeadline: resumedAt.addingTimeInterval(270))
@@ -49,7 +49,7 @@ struct DeferralDeclarationTests {
         #expect(presenter.indicatorText == "5h ~30%")
     }
 
-    @Test("QB-APP-001 AC-55: com a leitura atrasada, a declaração cessa na mesma atualização")
+    @Test("com a leitura atrasada, a declaração cessa na mesma atualização")
     func theDeclarationStopsWhenTheReadingArrives() {
         let arrivedAt = Journey.readAt.addingTimeInterval(320)
         let presenter = Journey.openPanel(over: Journey.state())
@@ -73,7 +73,7 @@ struct DeferralDeclarationTests {
         }
     }
 
-    @Test("QB-APP-001 AC-56: abrir, fechar e reabrir não encerra a declaração, e o intervalo base não a nega")
+    @Test("abrir, fechar e reabrir não encerra a declaração, e o intervalo base não a nega")
     func reopeningThePanelDoesNotEndTheDeclaration() {
         let observed = Journey.readAt.addingTimeInterval(300)
         let presenter = Journey.openPanel(over: Journey.state())
@@ -98,7 +98,7 @@ struct DeferralPunctualityTests {
         Journey.state(deferralDeadline: deadline, readAt: readAt)
     }
 
-    @Test("QB-API-001 AC-45: com observador presente, o cruzamento é publicado em até 1 segundo")
+    @Test("com observador presente, o cruzamento é publicado em até 1 segundo")
     func theCrossingIsPublishedWithinASecondWhileObserved() async throws {
         let ledger = RenderLedger()
         let now = Date()
@@ -123,7 +123,7 @@ struct DeferralPunctualityTests {
         #expect(presenter.panelContent(at: Date()).cadenceLine?.contains("adiada pelo sistema") == true)
     }
 
-    @Test("QB-API-001 AC-45: com o painel fechado nada fica armado e nada dispara")
+    @Test("com o painel fechado nada fica armado e nada dispara")
     func nothingIsArmedWhileThePanelIsClosed() async throws {
         let ledger = RenderLedger()
         let now = Date()
@@ -139,7 +139,7 @@ struct DeferralPunctualityTests {
         #expect(ledger.recorded.isEmpty, "o limiar cobrou atividade do repouso")
     }
 
-    @Test("QB-API-001 AC-45: fechar o painel desarma o limiar antes de ele vencer")
+    @Test("fechar o painel desarma o limiar antes de ele vencer")
     func closingThePanelDisarmsTheThreshold() async throws {
         let ledger = RenderLedger()
         let now = Date()
@@ -157,7 +157,7 @@ struct DeferralPunctualityTests {
         #expect(ledger.recorded.isEmpty)
     }
 
-    @Test("QB-API-001 AC-45: um prazo já vencido não arma nada, porque não há cruzamento a esperar")
+    @Test("um prazo já vencido não arma nada, porque não há cruzamento a esperar")
     func aPassedDeadlineArmsNothing() {
         let now = Date()
         let presenter = IndicatorPresenter(

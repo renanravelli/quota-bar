@@ -19,7 +19,7 @@ struct DeferralPolicyTests {
         anchoredAt.addingTimeInterval(value)
     }
 
-    @Test("AC-20: o adiamento é declarado só acima do limiar")
+    @Test("o adiamento é declarado só acima do limiar")
     func deferralIsDeclaredOnlyAboveTheThreshold() {
         let cycle = Self.appointment(intended: .seconds(180))
 
@@ -27,7 +27,7 @@ struct DeferralPolicyTests {
         #expect(DeferralPolicy.standard.isDeferred(cycle, at: Self.second(240)) == false)
     }
 
-    @Test("AC-20: exatamente no prazo ainda é variação normal de agendamento")
+    @Test("exatamente no prazo ainda é variação normal de agendamento")
     func exactlyOnTheDeadlineIsNotDeferral() {
         let cycle = Self.appointment(intended: .seconds(180))
 
@@ -35,7 +35,7 @@ struct DeferralPolicyTests {
         #expect(DeferralPolicy.standard.isDeferred(cycle, at: Self.second(271)))
     }
 
-    @Test("AC-58: o veredito é o prazo, e não uma segunda conta ao lado dele")
+    @Test("o veredito é o prazo, e não uma segunda conta ao lado dele")
     func theVerdictIsDefinedByTheDeadline() {
         let cycle = Self.appointment(intended: .seconds(180))
         let deadline = DeferralPolicy.standard.deadline(for: cycle)
@@ -45,7 +45,7 @@ struct DeferralPolicyTests {
         #expect(DeferralPolicy.standard.isDeferred(cycle, at: deadline.addingTimeInterval(-1)) == false)
     }
 
-    @Test("AC-58: dobrado o limiar no único lugar em que ele existe, prazo e veredito acompanham juntos")
+    @Test("dobrado o limiar no único lugar em que ele existe, prazo e veredito acompanham juntos")
     func doublingTheThresholdMovesDeadlineAndVerdictTogether() {
         let doubled = DeferralPolicy(tolerance: DeferralPolicy.standard.tolerance * 2)
         let cycle = Self.appointment(intended: .seconds(180))
@@ -58,7 +58,7 @@ struct DeferralPolicyTests {
         #expect(DeferralPolicy.standard.deadline(for: cycle) == Self.second(270))
     }
 
-    @Test("AC-58: o prazo se conta da âncora do agendamento, não da leitura anterior")
+    @Test("o prazo se conta da âncora do agendamento, não da leitura anterior")
     func theDeadlineIsCountedFromTheAnchor() {
         let reanchored = ProbeAppointment(
             instant: Self.second(1_200),
@@ -70,7 +70,7 @@ struct DeferralPolicyTests {
         #expect(DeferralPolicy.standard.isDeferred(reanchored, at: Self.second(1_100)) == false)
     }
 
-    @Test("AC-58: a composição de produção usa a política padrão e nada mais")
+    @Test("a composição de produção usa a política padrão e nada mais")
     func productionUsesTheStandardPolicy() {
         #expect(DeferralPolicy.standard.tolerance == 0.5)
         #expect(ProbePlanner(startingAt: Self.anchoredAt).policy == DeferralPolicy.standard)

@@ -30,7 +30,7 @@ struct StableQuotaStateProviderTests {
         return log.all
     }
 
-    @Test("REQ-23: o estado é emitido uma vez, sem rotação nem alteração espontânea")
+    @Test("o estado é emitido uma vez, sem rotação nem alteração espontânea")
     func theStateIsEmittedOnceAndNeverRotates() async throws {
         let emitted = await Self.observe(StableQuotaStateProvider())
 
@@ -39,7 +39,7 @@ struct StableQuotaStateProviderTests {
         #expect(emitted.first?.cycle?.cadence.nature == .base)
     }
 
-    @Test("AC-29 de QB-APP-002: o reset é ajustável para menos de uma hora")
+    @Test("o reset é ajustável para menos de uma hora")
     func theResetIsControllableBelowOneHour() async throws {
         let readAt = Date(timeIntervalSince1970: 1_700_000_000)
         let provider = StableQuotaStateProvider(resetsIn: .seconds(1_500), readAt: readAt)
@@ -52,7 +52,7 @@ struct StableQuotaStateProviderTests {
         #expect(remaining < 3_600)
     }
 
-    @Test("REQ-23: observar o modo estável não pede leitura nem muda o regime")
+    @Test("observar o modo estável não pede leitura nem muda o regime")
     func observingTheStableModeChangesNothing() async {
         let provider = StableQuotaStateProvider()
 

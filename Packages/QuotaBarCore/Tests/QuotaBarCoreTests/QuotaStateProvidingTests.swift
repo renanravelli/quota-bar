@@ -32,7 +32,7 @@ struct QuotaStateProvidingTests {
         return IndicatorTextFormatter.text(for: resolved)
     }
 
-    @Test("AC-21: o estado mais recente fornecido chega a quem consome o provedor")
+    @Test("o estado mais recente fornecido chega a quem consome o provedor")
     func providerDeliversEachState() async {
         let provider = ControlledQuotaStateProvider()
         var received: [String] = []
@@ -48,7 +48,7 @@ struct QuotaStateProvidingTests {
         #expect(received == ["5h 40%", "5h 55%"])
     }
 
-    @Test("AC-21: o consumo acompanha o fornecimento sem exigir sondagem")
+    @Test("o consumo acompanha o fornecimento sem exigir sondagem")
     func consumerSeesUpdateWithoutPolling() async {
         let provider = ControlledQuotaStateProvider()
         var iterator = provider.states.makeAsyncIterator()
@@ -63,7 +63,7 @@ struct QuotaStateProvidingTests {
         #expect(second.map(Self.text) == "5h 55%")
     }
 
-    @Test("AC-21: o provedor registra pedidos explícitos de atualização")
+    @Test("o provedor registra pedidos explícitos de atualização")
     func providerRecordsRefreshRequests() async {
         let provider = ControlledQuotaStateProvider()
 
@@ -73,7 +73,7 @@ struct QuotaStateProvidingTests {
         #expect(await provider.refreshCount() == 2)
     }
 
-    @Test("AC-21: o contrato do provedor é consumível por trás do protocolo")
+    @Test("o contrato do provedor é consumível por trás do protocolo")
     func providerIsUsableThroughTheProtocol() async {
         let provider: any QuotaStateProviding = ControlledQuotaStateProvider()
 

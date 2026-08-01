@@ -76,7 +76,7 @@ aggregateTargets:
     targets:
       - QuotaBar
     buildScripts:
-      - name: Portão de direitos e arquitetura do binário assinado (ADR-006)
+      - name: Portão de direitos e arquitetura do binário assinado
         basedOnDependencyAnalysis: false
         script: |
           "$SRCROOT/Scripts/verify-signed-product.sh" \

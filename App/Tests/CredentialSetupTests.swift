@@ -8,7 +8,7 @@ import QuotaBarTransport
 @MainActor
 @Suite("Superfície de configuração da credencial")
 struct CredentialSetupTests {
-    @Test("QB-SEC-001 AC-2: a superfície diz o comando, onde colar e como salvar, sem remeter a documentação externa")
+    @Test("a superfície diz o comando, onde colar e como salvar, sem remeter a documentação externa")
     func theSurfaceSaysEverythingInOnePlace() async {
         let content = await Setup.opened().content
 
@@ -24,7 +24,7 @@ struct CredentialSetupTests {
         }
     }
 
-    @Test("QB-SEC-001 AC-3: o comando é copiado em uma ação, e nada além dele vai para a área de transferência")
+    @Test("o comando é copiado em uma ação, e nada além dele vai para a área de transferência")
     func theCommandIsCopiedInOneAction() async {
         let clipboard = SpyClipboard()
         let model = await Setup.opened(clipboard: clipboard)
@@ -45,7 +45,7 @@ struct CredentialSetupTests {
         #expect(content.saveDisabledReason != nil)
     }
 
-    @Test("QB-SEC-001 AC-5: instalar o Claude Code libera a superfície sem reiniciar o aplicativo")
+    @Test("instalar o Claude Code libera a superfície sem reiniciar o aplicativo")
     func installingClaudeCodeUnblocksTheSurface() async {
         let discovery = DiscoverySwitch(.notFound)
         let model = CredentialSetupModel(
@@ -67,7 +67,7 @@ struct CredentialSetupTests {
         #expect(model.content.precondition == nil)
     }
 
-    @Test("QB-SEC-001 AC-14: sem Claude Code, tentar salvar não grava e declara a pendência")
+    @Test("sem Claude Code, tentar salvar não grava e declara a pendência")
     func savingWithoutClaudeCodeStoresNothing() async {
         let store = RecordingCredentialStore()
         let verifier = GatedVerifier(.success)
@@ -81,7 +81,7 @@ struct CredentialSetupTests {
         #expect(model.message == CredentialSetupText.message(for: VerificationOutcome.claudeCodeNotFound))
     }
 
-    @Test("QB-SEC-001 AC-7: forma inválida é recusada sem rede e sem gravar, declarando o que se esperava")
+    @Test("forma inválida é recusada sem rede e sem gravar, declarando o que se esperava")
     func malformedValueIsRefusedWithoutNetwork() async {
         let store = RecordingCredentialStore()
         let verifier = GatedVerifier(.success)
@@ -96,7 +96,7 @@ struct CredentialSetupTests {
         #expect(model.message?.text.contains("sk-ant-oat01-") == true)
     }
 
-    @Test("QB-SEC-001 AC-8: espaços e quebras de linha em volta não custam uma tentativa")
+    @Test("espaços e quebras de linha em volta não custam uma tentativa")
     func surroundingWhitespaceIsIgnored() async {
         let store = RecordingCredentialStore()
         let model = await Setup.opened(store: store)
@@ -107,7 +107,7 @@ struct CredentialSetupTests {
         #expect(await store.holds(credentialCanary))
     }
 
-    @Test("QB-SEC-001 AC-9: campo vazio não grava, não pede rede e não muda o estado da superfície")
+    @Test("campo vazio não grava, não pede rede e não muda o estado da superfície")
     func emptyFieldChangesNothing() async {
         let store = RecordingCredentialStore()
         let verifier = GatedVerifier(.success)
@@ -122,7 +122,7 @@ struct CredentialSetupTests {
         #expect(model.content == before)
     }
 
-    @Test("QB-SEC-001 AC-10: a superfície só passa a Configurada depois do desfecho da verificação")
+    @Test("a superfície só passa a Configurada depois do desfecho da verificação")
     func successOnlyAfterRealVerification() async {
         let store = RecordingCredentialStore()
         let verifier = GatedVerifier(.success, gated: true)
@@ -142,7 +142,7 @@ struct CredentialSetupTests {
         #expect(await store.holds(credentialCanary))
     }
 
-    @Test("QB-SEC-001 AC-11: credencial recusada e credencial expirada não gravam, e a pendência continua")
+    @Test("credencial recusada e credencial expirada não gravam, e a pendência continua")
     func refusedAndExpiredDoNotStore() async {
         for outcome in [VerificationOutcome.credentialRejected, .credentialExpired] {
             let store = RecordingCredentialStore()
@@ -157,7 +157,7 @@ struct CredentialSetupTests {
         }
     }
 
-    @Test("QB-SEC-001 AC-12: bloqueio por política grava e a superfície declara o bloqueio")
+    @Test("bloqueio por política grava e a superfície declara o bloqueio")
     func policyBlockStoresAndDeclares() async {
         let store = RecordingCredentialStore()
         let model = await Setup.opened(store: store, verifier: GatedVerifier(.blockedByPolicy))
@@ -171,7 +171,7 @@ struct CredentialSetupTests {
         #expect(model.content.replaceTitle != nil)
     }
 
-    @Test("QB-SEC-001 AC-13: falha de comunicação grava e declara que o aplicativo tentará por conta própria")
+    @Test("falha de comunicação grava e declara que o aplicativo tentará por conta própria")
     func communicationFailureStoresAndPromisesToRetry() async {
         let store = RecordingCredentialStore()
         let model = await Setup.opened(store: store, verifier: GatedVerifier(.communicationFailure))
@@ -184,7 +184,7 @@ struct CredentialSetupTests {
         #expect(model.message?.text.contains("tentará") == true)
     }
 
-    @Test("QB-SEC-001 AC-28: resposta inesperada não grava e não acusa a credencial")
+    @Test("resposta inesperada não grava e não acusa a credencial")
     func unexpectedResponseNeitherStoresNorAccuses() async {
         let store = RecordingCredentialStore()
         let model = await Setup.opened(store: store, verifier: GatedVerifier(.unexpectedResponse))
@@ -201,7 +201,7 @@ struct CredentialSetupTests {
         #expect(!text.contains("expirou"))
     }
 
-    @Test("QB-SEC-001 AC-29: a gravação segue a tabela dos sete desfechos, sem reimplementá-la")
+    @Test("a gravação segue a tabela dos sete desfechos, sem reimplementá-la")
     func persistenceFollowsTheOutcomeTable() async {
         for outcome in VerificationOutcome.allCases {
             let store = RecordingCredentialStore()
@@ -216,7 +216,7 @@ struct CredentialSetupTests {
         }
     }
 
-    @Test("QB-SEC-001 AC-26: uma verificação por vez — salvar de novo não dispara requisição adicional")
+    @Test("uma verificação por vez — salvar de novo não dispara requisição adicional")
     func onlyOneVerificationAtATime() async {
         let verifier = GatedVerifier(.success, gated: true)
         let model = await Setup.opened(verifier: verifier)
@@ -237,7 +237,7 @@ struct CredentialSetupTests {
         #expect(model.stage == .configured)
     }
 
-    @Test("QB-SEC-001 AC-27: fechar durante a verificação não grava pelas costas e preserva o estado anterior")
+    @Test("fechar durante a verificação não grava pelas costas e preserva o estado anterior")
     func closingDuringVerificationStoresNothing() async {
         let store = RecordingCredentialStore()
         let verifier = GatedVerifier(.success, gated: true)
@@ -257,7 +257,7 @@ struct CredentialSetupTests {
         #expect(model.message == nil)
     }
 
-    @Test("QB-SEC-001 AC-17: configurada, a superfície informa a existência e oferece substituir e remover")
+    @Test("configurada, a superfície informa a existência e oferece substituir e remover")
     func configuredShowsExistenceAndItsTwoActions() async {
         let store = RecordingCredentialStore(seeded: credentialCanary)
         let model = await Setup.opened(store: store)
@@ -272,7 +272,7 @@ struct CredentialSetupTests {
         #expect(!Setup.text(of: content).contains { $0.contains(credentialCanary) })
     }
 
-    @Test("QB-SEC-001 AC-18: substituição malsucedida preserva a credencial anterior")
+    @Test("credencial nova recusada na verificação preserva a anterior e volta ao estado configurado")
     func failedReplacementPreservesThePreviousCredential() async {
         let store = RecordingCredentialStore(seeded: credentialCanary)
         let model = await Setup.opened(store: store, verifier: GatedVerifier(.credentialRejected))
@@ -288,7 +288,7 @@ struct CredentialSetupTests {
         #expect(model.message?.action == .generateNewCredential)
     }
 
-    @Test("QB-API-001 REQ-18: só a mudança do que está guardado avisa a sondagem")
+    @Test("só a mudança do que está guardado avisa a sondagem")
     func onlyAChangeOfTheStoredCredentialAnnouncesItself() async {
         let stored = CredentialChangeSpy()
         await Setup.opened(credentialDidChange: stored).save(credentialCanary)
@@ -306,7 +306,7 @@ struct CredentialSetupTests {
         #expect(await unwritten.notifications == 0)
     }
 
-    @Test("QB-SEC-001 REQ-12: remover a credencial avisa a sondagem, que passa a declarar a pendência")
+    @Test("remover a credencial avisa a sondagem, que passa a declarar a pendência")
     func removingTheCredentialAnnouncesItself() async {
         let spy = CredentialChangeSpy()
         let model = await Setup.opened(
@@ -319,7 +319,7 @@ struct CredentialSetupTests {
         #expect(await spy.notifications == 1)
     }
 
-    @Test("QB-SEC-001 AC-19: remover apaga de fato e devolve a superfície à pendência")
+    @Test("remover apaga de fato e devolve a superfície à pendência")
     func removalDeletesTheItem() async {
         let store = RecordingCredentialStore(seeded: credentialCanary)
         let model = await Setup.opened(store: store)
@@ -335,7 +335,7 @@ struct CredentialSetupTests {
         #expect(model.content.configuredNotice == nil)
     }
 
-    @Test("QB-SEC-001 AC-15: os sete desfechos e as falhas de Keychain têm mensagens distintas e acionáveis")
+    @Test("os sete desfechos e as falhas de Keychain têm mensagens distintas e acionáveis")
     func everyOutcomeHasItsOwnActionableMessage() {
         let outcomes = VerificationOutcome.allCases.map(CredentialSetupText.message(for:))
         let keychain = [
@@ -357,7 +357,7 @@ struct CredentialSetupTests {
         #expect(CredentialSetupText.message(for: .success).action == .nothingToDo)
     }
 
-    @Test("QB-SEC-001 AC-16: a recusa sem evidência de expiração usa a mensagem única, sem afirmar expiração")
+    @Test("a recusa sem evidência de expiração usa a mensagem única, sem afirmar expiração")
     func refusalWithoutEvidenceDoesNotClaimExpiration() {
         let refusal = CredentialSetupText.message(for: .credentialRejected)
 
@@ -366,7 +366,7 @@ struct CredentialSetupTests {
         #expect(!refusal.text.lowercased().contains("expir"))
     }
 
-    @Test("QB-SEC-001 AC-22: falha de Keychain ao gravar tem mensagem própria e não acusa a credencial")
+    @Test("falha de Keychain ao gravar tem mensagem própria e não acusa a credencial")
     func keychainWriteFailureIsNotAnInvalidCredential() async {
         let store = RecordingCredentialStore()
         await store.refuseWrites(with: .interactionNotAllowed)
@@ -387,7 +387,7 @@ struct CredentialSetupTests {
         #expect(!CredentialSetupText.keychainWriteRefused.text.lowercased().contains("inválida"))
     }
 
-    @Test("QB-SEC-001 AC-22: falha de Keychain ao ler tem mensagem própria, distinta de ausente e de recusada")
+    @Test("falha de Keychain ao ler tem mensagem própria, distinta de ausente e de recusada")
     func keychainReadFailureHasItsOwnMessage() async {
         let store = RecordingCredentialStore(seeded: credentialCanary)
         await store.refusePresenceCheck(with: .interactionNotAllowed)
@@ -398,7 +398,7 @@ struct CredentialSetupTests {
         #expect(CredentialSetupText.keychainReadRefused.text != CredentialSetupText.keychainWriteRefused.text)
     }
 
-    @Test("QB-SEC-001 REQ-12: Keychain que recusa remover não declara remoção")
+    @Test("Keychain que recusa remover não declara remoção")
     func keychainRemovalFailureKeepsReportingConfigured() async {
         let store = RecordingCredentialStore(seeded: credentialCanary)
         await store.refuseRemoval(with: .interactionNotAllowed)
@@ -412,7 +412,7 @@ struct CredentialSetupTests {
         #expect(model.message == CredentialSetupText.keychainRemoveRefused)
     }
 
-    @Test("QB-SEC-001 AC-6 e QB-SEC-001 AC-21: nenhuma superfície da configuração exibe o valor, em nenhum estado")
+    @Test("nenhuma superfície da configuração exibe o valor, em nenhum estado")
     func noSurfaceEverShowsTheValue() async {
         let clipboard = SpyClipboard()
 
@@ -435,7 +435,7 @@ struct CredentialSetupTests {
         #expect(clipboard.copied.isEmpty)
     }
 
-    @Test("QB-SEC-001 AC-21: o modelo da superfície não guarda cópia do valor depois de salvar")
+    @Test("o modelo da superfície não guarda cópia do valor depois de salvar")
     func theModelKeepsNoCopyOfTheValue() async {
         let model = await Setup.opened()
 
@@ -449,7 +449,7 @@ struct CredentialSetupTests {
         #expect(!ownState.contains("sk-ant-oat01-"))
     }
 
-    @Test("QB-SEC-001 AC-24: o portador não vira texto em nenhuma das três formas")
+    @Test("o portador não vira texto em nenhuma das três formas")
     func theTokenNeverBecomesText() throws {
         let token = try #require(SubscriptionToken(pasted: credentialCanary))
 
@@ -459,7 +459,7 @@ struct CredentialSetupTests {
         #expect(!"\(token)".contains("CANARIO"))
     }
 
-    @Test("QB-APP-002 REQ-19: o texto da superfície tem contraste suficiente sobre a sua superfície")
+    @Test("o texto da superfície tem contraste suficiente sobre a sua superfície")
     func setupSurfaceKeepsTheRequiredContrast() {
         #expect(Contrast.ratio(Palette.text, PanelSurface.background) >= Contrast.minimumRatio)
         #expect(Contrast.ratio(Palette.textMuted, PanelSurface.background) >= Contrast.minimumRatio)

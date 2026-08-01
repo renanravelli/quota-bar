@@ -55,7 +55,7 @@ private enum Fixture {
 @MainActor
 @Suite("Episódio no indicador")
 struct EpisodeLifecycleTests {
-    @Test("QB-APP-002 AC-8: cruzamento de faixa dispara episódio")
+    @Test("o apresentador entra em episódio ao cruzar faixa")
     func bandCrossingStartsAnEpisode() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -68,7 +68,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.symbolAppearance.shape == .attention)
     }
 
-    @Test("QB-APP-002 AC-8: mudança de estado dispara episódio")
+    @Test("o apresentador entra em episódio ao mudar de estado")
     func stateChangeStartsAnEpisode() {
         let presenter = Fixture.presenter()
 
@@ -77,7 +77,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-8: troca da janela exibida dispara episódio")
+    @Test("o apresentador entra em episódio ao trocar a janela exibida")
     func windowChangeStartsAnEpisode() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50", window: .fiveHour))
@@ -89,7 +89,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-8: mudança de modo de fonte dispara episódio")
+    @Test("o apresentador entra em episódio ao mudar o modo de fonte")
     func sourceChangeStartsAnEpisode() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50", source: .primaryProbe))
@@ -100,7 +100,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-9: o episódio termina sozinho, sem depender de novo evento")
+    @Test("o episódio termina sozinho, sem depender de novo evento")
     func episodeEndsOnItsOwn() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -112,7 +112,7 @@ struct EpisodeLifecycleTests {
         #expect(!presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-5: durante o episódio o símbolo ganha cor e devolve ao template no fim")
+    @Test("durante o episódio o símbolo ganha cor e devolve ao template no fim")
     func episodeColoursAndReturnsToTemplate() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -128,7 +128,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.symbolAppearance.tint == .template)
     }
 
-    @Test("QB-APP-002 AC-10: um segundo evento substitui o episódio e reinicia a duração a partir dele")
+    @Test("um segundo evento substitui o episódio e reinicia a duração a partir dele")
     func secondEventReplacesInsteadOfQueueing() async throws {
         let presenter = Fixture.presenter(episodeDuration: .milliseconds(300))
         presenter.receive(Fixture.state(percent: "50"))
@@ -145,7 +145,7 @@ struct EpisodeLifecycleTests {
         #expect(!presenter.isInEpisode, "o episódio não terminou após a duração do segundo evento")
     }
 
-    @Test("QB-APP-002 AC-10: nenhum episódio fica pendente depois do último terminar")
+    @Test("nenhum episódio fica pendente depois do último terminar")
     func noEpisodeRemainsPending() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -159,7 +159,7 @@ struct EpisodeLifecycleTests {
         #expect(!presenter.isInEpisode, "um episódio enfileirado ressurgiu depois do término")
     }
 
-    @Test("QB-APP-002 AC-11: estado idêntico não dispara episódio")
+    @Test("estado idêntico não dispara episódio")
     func identicalStateDoesNotTrigger() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -170,7 +170,7 @@ struct EpisodeLifecycleTests {
         #expect(!presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-11: variação de percentual dentro da mesma faixa não dispara episódio")
+    @Test("o apresentador não entra em episódio com variação de percentual dentro da mesma faixa")
     func percentChangeWithinBandDoesNotTrigger() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -181,7 +181,7 @@ struct EpisodeLifecycleTests {
         #expect(!presenter.isInEpisode)
     }
 
-    @Test("QB-APP-002 AC-12: sem evento algum, a imagem do item não é reconstruída")
+    @Test("sem evento algum, a imagem do item não é reconstruída")
     func noRebuildWithoutEvents() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -197,7 +197,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.symbolRebuildCount == baseline)
     }
 
-    @Test("QB-APP-002 AC-12: um episódio custa exatamente duas reconstruções, entrada e volta")
+    @Test("um episódio custa exatamente duas reconstruções, entrada e volta")
     func anEpisodeCostsTwoRebuilds() async throws {
         let presenter = Fixture.presenter()
         presenter.receive(Fixture.state(percent: "50"))
@@ -210,7 +210,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.symbolRebuildCount - baseline == 2)
     }
 
-    @Test("QB-APP-002 AC-23: com Reduzir movimento não há episódio, e o estado final continua correto")
+    @Test("com Reduzir movimento não há episódio, e o estado final continua correto")
     func reduceMotionSuppressesTheEpisode() async throws {
         let presenter = Fixture.presenter(reduceMotion: .on)
         presenter.receive(Fixture.state(percent: "50"))
@@ -222,7 +222,7 @@ struct EpisodeLifecycleTests {
         #expect(presenter.indicatorText == "5h 80%")
     }
 
-    @Test("QB-APP-002 AC-24: preferência indeterminada também não anima")
+    @Test("preferência indeterminada também não anima")
     func undeterminedPreferenceSuppressesTheEpisode() {
         let presenter = Fixture.presenter(reduceMotion: .undetermined)
         presenter.receive(Fixture.state(percent: "50"))

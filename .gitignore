@@ -4,7 +4,9 @@
 .LSOverride
 Icon?
 
-# Xcode — projeto gerado pelo XcodeGen (ADR-004)
+# Xcode — o .xcodeproj é gerado pelo XcodeGen a partir do project.yml, que é a
+# forma versionada da configuração: o arquivo gerado tem ordenação instável,
+# conflita com frequência e não é revisável em diff.
 *.xcodeproj
 *.xcworkspace
 

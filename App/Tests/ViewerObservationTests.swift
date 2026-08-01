@@ -46,7 +46,7 @@ private enum Fixture {
 @MainActor
 @Suite("Observação do painel e regime de cadência")
 struct ViewerObservationTests {
-    @Test("QB-APP-001 AC-36: abrir o painel devolve a cadência ao ritmo base e o indicador continua em ready")
+    @Test("abrir o painel devolve a cadência ao ritmo base e o indicador continua em ready")
     func openingThePanelRestoresTheBaseCadenceWithoutChangingTheState() async {
         let provider = RecordingQuotaStateProvider()
         let presenter = Fixture.presenter(provider)
@@ -71,7 +71,7 @@ struct ViewerObservationTests {
         }
     }
 
-    @Test("QB-API-001 REQ-11: abrir o painel muda o regime de cadência e não pede leitura")
+    @Test("abrir o painel muda o regime de cadência e não pede leitura")
     func openingThePanelDoesNotAskForAReading() async {
         let provider = RecordingQuotaStateProvider()
         let presenter = Fixture.presenter(provider)
@@ -82,7 +82,7 @@ struct ViewerObservationTests {
         #expect(await provider.refreshCount == 0)
     }
 
-    @Test("QB-APP-001 AC-36: fechar o painel devolve o regime de ociosidade")
+    @Test("fechar o painel devolve o regime de ociosidade")
     func closingThePanelReleasesTheRegime() async {
         let provider = RecordingQuotaStateProvider()
         let presenter = Fixture.presenter(provider)
@@ -94,7 +94,7 @@ struct ViewerObservationTests {
         #expect(await provider.viewerSignals == [true, false])
     }
 
-    @Test("QB-API-001 REQ-11: abrir e fechar repetidamente preserva a ordem dos sinais e não pede leitura")
+    @Test("abrir e fechar repetidamente preserva a ordem dos sinais e não pede leitura")
     func repeatedOpeningPreservesTheOrderOfTheSignals() async {
         let provider = RecordingQuotaStateProvider()
         let presenter = Fixture.presenter(provider)

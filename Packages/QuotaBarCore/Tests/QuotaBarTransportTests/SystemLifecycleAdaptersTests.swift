@@ -33,7 +33,7 @@ private func firstEvent(
 
 @Suite("Adaptadores de ciclo de vida do sistema", .serialized)
 struct SystemLifecycleAdaptersTests {
-    @Test("QB-API-001 AC-16: a suspensão e a retomada são ouvidas no centro do NSWorkspace")
+    @Test("a suspensão e a retomada são ouvidas no centro do NSWorkspace")
     func theObserverListensToTheWorkspaceCenter() {
         let observer = WorkspacePowerEventObserver()
 
@@ -41,7 +41,7 @@ struct SystemLifecycleAdaptersTests {
         #expect(observer.center !== NotificationCenter.default)
     }
 
-    @Test("QB-API-001 AC-16: a suspensão anunciada pelo centro do NSWorkspace chega")
+    @Test("a suspensão anunciada pelo centro do NSWorkspace chega")
     func sleepPostedOnTheWorkspaceCenterArrives() async {
         let observer = WorkspacePowerEventObserver()
 
@@ -55,7 +55,7 @@ struct SystemLifecycleAdaptersTests {
         #expect(event == .willSleep)
     }
 
-    @Test("QB-API-001 AC-16: a retomada anunciada pelo centro do NSWorkspace chega")
+    @Test("a retomada anunciada pelo centro do NSWorkspace chega")
     func wakePostedOnTheWorkspaceCenterArrives() async {
         let observer = WorkspacePowerEventObserver()
 
@@ -69,7 +69,7 @@ struct SystemLifecycleAdaptersTests {
         #expect(event == .didWake)
     }
 
-    @Test("QB-API-001 AC-16: o mesmo aviso no centro padrão não chega, e o silêncio seria o sintoma")
+    @Test("o mesmo aviso no centro padrão não chega, e o silêncio seria o sintoma")
     func theSameNotificationOnTheDefaultCenterNeverArrives() async {
         let observer = WorkspacePowerEventObserver()
 
@@ -83,13 +83,13 @@ struct SystemLifecycleAdaptersTests {
         #expect(event == nil)
     }
 
-    @Test("ADR-005: a atividade da sonda não impede a máquina de dormir")
+    @Test("a atividade da sonda não impede a máquina de dormir")
     func probeActivityStillAllowsIdleSystemSleep() {
         #expect(ProcessActivityAsserter.options == .userInitiatedAllowingIdleSystemSleep)
         #expect(ProcessActivityAsserter.options.contains(.idleSystemSleepDisabled) == false)
     }
 
-    @Test("ADR-005: a atividade da sonda é declarada e encerrada no processo real")
+    @Test("a atividade da sonda é declarada e encerrada no processo real")
     func probeActivityBeginsAndEndsOnTheRealProcess() {
         let asserter = ProcessActivityAsserter()
 

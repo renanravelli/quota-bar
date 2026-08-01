@@ -71,7 +71,7 @@ struct LogAbsenceGuardTests {
 
     private static let toolsTheSecretPathMustNotUse = ["/usr/bin/script", "SuspendingClock", "NSTemporaryDirectory"]
 
-    @Test("QB-SEC-001 AC-21 e QB-API-001 AC-26: a varredura alcança as fontes das duas configurações")
+    @Test("a varredura alcança as fontes das duas configurações")
     func theSweepReachesTheSourcesOfBothConfigurations() {
         let scanned = Set(Repository.productionSources.map(\.lastPathComponent))
         let missing = Self.sourcesTheSweepMustReach.subtracting(scanned)
@@ -79,7 +79,7 @@ struct LogAbsenceGuardTests {
         #expect(missing.isEmpty, "a varredura não alcançou \(missing.sorted().joined(separator: ", "))")
     }
 
-    @Test("ADR-003 e QB-API-001 REQ-17: nenhuma fonte de produção registra em log")
+    @Test("nenhuma fonte de produção registra em log")
     func noProductionSourceLogsAnything() throws {
         for source in Repository.productionSources {
             let contents = try String(contentsOf: source, encoding: .utf8)
@@ -89,7 +89,7 @@ struct LogAbsenceGuardTests {
         }
     }
 
-    @Test("QB-SEC-001 AC-21 e QB-API-001 AC-26: nenhuma fonte de produção compila condicionalmente")
+    @Test("nenhuma fonte de produção compila condicionalmente")
     func noProductionSourceCompilesConditionally() throws {
         for source in Repository.productionSources {
             let compilesConditionally = try String(contentsOf: source, encoding: .utf8).contains("#if")
@@ -108,7 +108,7 @@ struct LogAbsenceGuardTests {
         }
     }
 
-    @Test("QB-SEC-001 AC-21 e QB-API-001 AC-26: só o provedor difere entre Debug e Release")
+    @Test("só o provedor difere entre Debug e Release")
     func onlyTheProviderDiffersBetweenConfigurations() {
         #expect(Repository.configurationScopedSources == Self.sourcesOnlyOneConfigurationCompiles)
     }

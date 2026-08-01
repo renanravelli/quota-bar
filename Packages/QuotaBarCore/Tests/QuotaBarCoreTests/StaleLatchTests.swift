@@ -56,7 +56,7 @@ struct StaleLatchTests {
         band: .normal
     )
 
-    @Test("AC-44: uma vez marcada, a trava só sai com leitura nova")
+    @Test("uma vez marcada, a trava só sai com leitura nova")
     func latchHoldsUntilANewReading() {
         var latch = StaleLatch()
 
@@ -79,7 +79,7 @@ struct StaleLatchTests {
         #expect(latch.isLatched)
     }
 
-    @Test("AC-44: uma leitura nova destrava sozinha, sem ninguém precisar lembrar")
+    @Test("uma leitura nova destrava sozinha, sem ninguém precisar lembrar")
     func newReadingUnlatchesByItself() {
         var latch = StaleLatch()
 
@@ -98,7 +98,7 @@ struct StaleLatchTests {
         #expect(!latch.isLatched)
     }
 
-    @Test("AC-44: reavaliar a mesma leitura não destrava")
+    @Test("reavaliar a mesma leitura não destrava")
     func reevaluatingTheSameReadingDoesNotUnlatch() {
         var latch = StaleLatch()
 
@@ -115,7 +115,7 @@ struct StaleLatchTests {
         #expect(latch.isLatched)
     }
 
-    @Test("AC-11: reemitir a mesma leitura com instante novo não destrava")
+    @Test("reemitir a mesma leitura com instante novo não destrava")
     func reemittingTheSameReadingWithAFreshTimestampDoesNotUnlatch() {
         var latch = StaleLatch()
 
@@ -133,7 +133,7 @@ struct StaleLatchTests {
         #expect(latch.isLatched)
     }
 
-    @Test("AC-11: reemitir o mesmo estado mantém o indicador desatualizado")
+    @Test("reemitir o mesmo estado mantém o indicador desatualizado")
     func reemittedStateKeepsTheIndicatorStale() {
         var latch = StaleLatch()
         let reading = TestSnapshot.make(
@@ -152,7 +152,7 @@ struct StaleLatchTests {
         #expect(afterReemission == .stale(Self.halfOfTheFiveHourWindow))
     }
 
-    @Test("AC-10: uma leitura nova com o mesmo conteúdo destrava")
+    @Test("uma leitura nova com o mesmo conteúdo destrava")
     func aNewReadingWithIdenticalContentUnlatches() {
         var latch = StaleLatch()
         let reading = TestSnapshot.make(
@@ -171,7 +171,7 @@ struct StaleLatchTests {
         #expect(afterNewReading == .ready(Self.halfOfTheFiveHourWindow))
     }
 
-    @Test("AC-14: reset da janela exibida ultrapassado marca obsolescência mesmo com idade baixa")
+    @Test("reset da janela exibida ultrapassado marca obsolescência mesmo com idade baixa")
     func passedResetLatchesRegardlessOfAge() {
         var latch = StaleLatch()
 
@@ -189,7 +189,7 @@ struct StaleLatchTests {
         #expect(afterwards)
     }
 
-    @Test("AC-23: leitura no futuro tem idade zero e não marca obsolescência")
+    @Test("leitura no futuro tem idade zero e não marca obsolescência")
     func readingInTheFutureIsNeverStaleByAge() {
         var latch = StaleLatch()
 
@@ -202,7 +202,7 @@ struct StaleLatchTests {
         #expect(StalenessPolicy.age(ofReadingAt: Self.readAt, now: Self.at(-3_600)) == .zero)
     }
 
-    @Test("AC-45: backoff por falha não adia a marcação")
+    @Test("backoff por falha não adia a marcação")
     func failureBackoffDoesNotPostponeStaleness() {
         var latch = StaleLatch()
         var maxIdle = Duration.seconds(180)
@@ -229,7 +229,7 @@ struct StaleLatchTests {
         #expect(verdicts[11] == true)
     }
 
-    @Test("AC-44: o veredito nunca volta de stale para ready", arguments: 1...200 as ClosedRange<UInt64>)
+    @Test("o veredito nunca volta de stale para ready", arguments: 1...200 as ClosedRange<UInt64>)
     func verdictNeverRegresses(seed: UInt64) {
         var rng = SeededGenerator(seed: seed)
         var latch = StaleLatch()
@@ -260,7 +260,7 @@ struct StaleLatchTests {
         }
     }
 
-    @Test("AC-44: sem a trava o veredito oscilaria — é isso que a trava impede", arguments: 1...200 as ClosedRange<UInt64>)
+    @Test("sem a trava o veredito oscilaria — é isso que a trava impede", arguments: 1...200 as ClosedRange<UInt64>)
     func policyAloneWouldOscillateWhileLatchDoesNot(seed: UInt64) {
         var rng = SeededGenerator(seed: seed)
         var latch = StaleLatch()
@@ -301,7 +301,7 @@ struct StaleLatchTests {
         }
     }
 
-    @Test("AC-45: cadência ampliada por falha não eleva a maior ociosidade da leitura")
+    @Test("cadência ampliada por falha não eleva a maior ociosidade da leitura")
     func failureWidenedCadenceNeverRaisesIdleMaximum() {
         var maxIdle = Duration.seconds(180)
         let steps = [

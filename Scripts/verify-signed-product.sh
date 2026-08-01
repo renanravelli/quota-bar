@@ -85,7 +85,7 @@ fi
 present_archs="$(lipo -archs "$binary" | tr ' ' '\n' | sed '/^$/d' | sort -u | paste -sd' ' -)"
 
 if [ "$present_archs" != "$EXPECTED_ARCHS" ]; then
-  echo "error: o binário assinado tem arquitetura '$present_archs', e o esperado é exatamente '$EXPECTED_ARCHS' (ADR-006)"
+  echo "error: o binário assinado tem arquitetura '$present_archs', e o esperado é exatamente '$EXPECTED_ARCHS'"
   echo "error: fatia adicional é suporte que ninguém consegue testar neste projeto"
   exit 1
 fi
@@ -94,7 +94,7 @@ if [ "$MODE" = "release" ]; then
   fixture_symbols="$(nm -U "$binary" 2>/dev/null | grep -c 'QuotaBarCoreFixtures' || true)"
   if [ "${fixture_symbols:-0}" -ne 0 ]; then
     echo "error: o binário '$CONFIG' contém $fixture_symbols símbolo(s) de QuotaBarCoreFixtures"
-    echo "error: artefato de desenvolvimento não pode ser distribuído (ADR-006)"
+    echo "error: andaime de teste não pode viajar no produto distribuído"
     exit 1
   fi
 fi
@@ -130,16 +130,18 @@ brand_named_art="$(printf '%s\n' "$repository_art" | while IFS= read -r path; do
   basename "$path" | grep -qiE "$brand_pattern" && printf '%s\n' "$path"
 done || true)"
 if [ -n "$brand_named_art" ]; then
-  echo "error: arquivo de arte com nome de marca de terceiro no repositório (ADR-007):"
+  echo "error: arquivo de arte com nome de marca de terceiro no repositório:"
   printf 'error:   %s\n' $brand_named_art
+  echo "error: o aplicativo distribuído não incorpora marca de terceiro em nenhuma superfície visual"
   exit 1
 fi
 
 if [ "$MODE" = "release" ]; then
   bundled_art="$(find "$APP_PATH" -type f 2>/dev/null | grep -iE "\.($art_extensions)$" || true)"
   if [ -n "$bundled_art" ]; then
-    echo "error: o bundle '$CONFIG' contém arte fora do conjunto aprovado (REQ-20):"
+    echo "error: o bundle '$CONFIG' contém arte fora do conjunto aprovado:"
     printf 'error:   %s\n' $bundled_art
+    echo "error: só a arte própria e aprovada é distribuída; o resto sai do produto"
     exit 1
   fi
 
@@ -152,7 +154,7 @@ if [ "$MODE" = "release" ]; then
       | grep -vE '^ZZZZPackedAsset-' \
       | grep -v -x -F -f <(printf '%s\n' "$APPROVED_ASSETS") || true)"
     if [ -n "$unapproved" ]; then
-      echo "error: o catálogo de recursos de '$CONFIG' contém entradas fora do conjunto aprovado (REQ-20):"
+      echo "error: o catálogo de recursos de '$CONFIG' contém entradas fora do conjunto aprovado:"
       printf 'error:   %s\n' $unapproved
       echo "error: catálogo de recursos não sofre dead-stripping; tudo que entra é distribuído"
       exit 1
@@ -186,13 +188,13 @@ if [ "$MODE" = "debug" ]; then
   if [ -n "$injected_by_test" ]; then
     echo "error: este produto veio de uma build de teste, e traz direitos que o Xcode injeta no host de teste:"
     printf 'error:   %s\n' $injected_by_test
-    echo "error: reconstrua com a ação de build, ou confira em modo 'test-host' (ADR-006)"
+    echo "error: reconstrua com a ação de build, ou confira em modo 'test-host'"
     exit 1
   fi
 fi
 
 if [ "$signed_plist" != "$expected_plist" ]; then
-  echo "error: o conjunto de direitos do produto não é o esperado no modo '$MODE' (ADR-006):"
+  echo "error: o conjunto de direitos do produto não é o esperado no modo '$MODE':"
   diff -u --label esperado --label assinado \
     <(printf '%s\n' "$expected_plist") <(printf '%s\n' "$signed_plist") \
     | sed 's/^/error:   /' || true

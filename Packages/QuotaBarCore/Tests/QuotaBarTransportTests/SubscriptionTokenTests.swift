@@ -7,7 +7,7 @@ let canary = "sk-ant-oat01-CANARIO-CREDENCIAL-NAO-DEVE-VAZAR"
 
 @Suite("Forma e redação do portador da credencial")
 struct SubscriptionTokenTests {
-    @Test("AC-7: valor com prefixo diferente do esperado é recusado", arguments: [
+    @Test("valor com prefixo diferente do esperado é recusado", arguments: [
         "sk-ant-api03-abcdefghijklmnopqrstuvwxyz",
         "sk-ant-oat02-abcdefghijklmnopqrstuvwxyz",
         "oat01-abcdefghijklmnopqrstuvwxyz",
@@ -17,7 +17,7 @@ struct SubscriptionTokenTests {
         #expect(SubscriptionToken(pasted: pasted) == nil)
     }
 
-    @Test("AC-7: valor com espaço interno é recusado, mesmo com o prefixo esperado", arguments: [
+    @Test("valor com espaço interno é recusado, mesmo com o prefixo esperado", arguments: [
         "sk-ant-oat01-abcdef ghijkl",
         "sk-ant-oat01-abcdef\tghijkl",
         "sk-ant-oat01-abcdef\nghijkl",
@@ -29,12 +29,12 @@ struct SubscriptionTokenTests {
         #expect(SubscriptionToken(pasted: pasted) == nil)
     }
 
-    @Test("AC-7: aparar as bordas não resgata um valor com espaço interno")
+    @Test("aparar as bordas não resgata um valor com espaço interno")
     func trimmingDoesNotRescueInteriorWhitespace() {
         #expect(SubscriptionToken(pasted: "  \n sk-ant-oat01-abcdef ghijkl \n  ") == nil)
     }
 
-    @Test("AC-8: bordas em branco não custam uma tentativa ao usuário", arguments: [
+    @Test("bordas em branco não custam uma tentativa ao usuário", arguments: [
         "  \n\t\(canary)\n  ",
         "\(canary)\n",
         " \(canary)",
@@ -46,12 +46,12 @@ struct SubscriptionTokenTests {
         #expect(token.withValue { $0 } == canary)
     }
 
-    @Test("AC-9: campo vazio é recusado", arguments: ["", "   ", "\n\t "])
+    @Test("campo vazio é recusado", arguments: ["", "   ", "\n\t "])
     func rejectsEmptyInput(pasted: String) {
         #expect(SubscriptionToken(pasted: pasted) == nil)
     }
 
-    @Test("AC-24: interpolar o portador não produz o valor")
+    @Test("interpolar o portador não produz o valor")
     func interpolationDoesNotProduceTheValue() throws {
         let token = try #require(SubscriptionToken(pasted: canary))
 
@@ -59,7 +59,7 @@ struct SubscriptionTokenTests {
         #expect("credencial: \(token)" == "credencial: SubscriptionToken(redigido)")
     }
 
-    @Test("AC-24: descrever e depurar o portador não produz o valor")
+    @Test("descrever e depurar o portador não produz o valor")
     func descriptionAndDebugDescriptionAreRedacted() throws {
         let token = try #require(SubscriptionToken(pasted: canary))
 
@@ -77,7 +77,7 @@ struct SubscriptionTokenTests {
         }
     }
 
-    @Test("AC-24: o portador dentro de outro valor continua redigido")
+    @Test("o portador dentro de outro valor continua redigido")
     func redactionSurvivesBeingNested() throws {
         let token = try #require(SubscriptionToken(pasted: canary))
         let outcome = KeychainOutcome.success(token)
@@ -87,7 +87,7 @@ struct SubscriptionTokenTests {
         #expect(!String(describing: Optional(token)).contains(canary))
     }
 
-    @Test("REQ-13: o portador não é serializável, para que não haja segundo caminho de saída")
+    @Test("o portador não é serializável, para que não haja segundo caminho de saída")
     func theTokenIsNotEncodable() throws {
         let token: Any = try #require(SubscriptionToken(pasted: canary))
 
@@ -95,7 +95,7 @@ struct SubscriptionTokenTests {
         #expect(!(token is any Decodable))
     }
 
-    @Test("REQ-17: o valor é entregue ao escopo, e é o valor colado")
+    @Test("o valor é entregue ao escopo, e é o valor colado")
     func withValueDeliversThePastedValue() throws {
         let token = try #require(SubscriptionToken(pasted: canary))
 
@@ -103,7 +103,7 @@ struct SubscriptionTokenTests {
         #expect(token.withValue { Data($0.utf8) } == Data(canary.utf8))
     }
 
-    @Test("REQ-17: withValue propaga o erro lançado pelo escopo")
+    @Test("withValue propaga o erro lançado pelo escopo")
     func withValueRethrows() throws {
         struct Interrupted: Error {}
         let token = try #require(SubscriptionToken(pasted: canary))

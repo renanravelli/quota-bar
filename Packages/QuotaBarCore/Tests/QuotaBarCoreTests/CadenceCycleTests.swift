@@ -17,14 +17,14 @@ struct CadenceCycleTests {
         )
     }
 
-    @Test("AC-42: o que se agenda tem três naturezas, e adiada pelo sistema não é uma delas")
+    @Test("o que se agenda tem três naturezas, e adiada pelo sistema não é uma delas")
     func whatIsScheduledCannotSayDeferred() {
         #expect(ScheduledNature.allCases.count == 3)
         #expect(Set(ScheduledNature.allCases.map(\.observed)).count == 3)
         #expect(!ScheduledNature.allCases.map(\.observed).contains(.deferredBySystem))
     }
 
-    @Test("AC-42: há um único lugar no estado que fala do ciclo corrente")
+    @Test("há um único lugar no estado que fala do ciclo corrente")
     func theStateSpeaksOfTheCycleInExactlyOnePlace() {
         let published = Self.state(cycle: TestCycle.scheduled())
         let children = Mirror(reflecting: published).children.compactMap(\.label)
@@ -35,7 +35,7 @@ struct CadenceCycleTests {
         #expect(!children.contains("deferralDeadline"))
     }
 
-    @Test("AC-40: com ciclo agendado a condição existe e nasce não em atraso")
+    @Test("com ciclo agendado a condição existe e nasce não em atraso")
     func theCycleStartsPunctual() throws {
         var planner = ProbePlanner(startingAt: Self.now)
         planner.recordReading(utilizationChanged: true, at: Self.now)
@@ -47,13 +47,13 @@ struct CadenceCycleTests {
         #expect(cycle.cadence.nature == .base)
     }
 
-    @Test("AC-41: sem ciclo agendado, o estado não afirma cadência alguma")
+    @Test("sem ciclo agendado, o estado não afirma cadência alguma")
     func noCycleMeansNoAffirmation() {
         #expect(Self.state(cycle: nil).cycle == nil)
         #expect(QuotaState.unconfigured.cycle == nil)
     }
 
-    @Test("AC-57 e REQ-29: o que não é ociosidade não eleva a maior cadência de ociosidade")
+    @Test("o que não é ociosidade não eleva a maior cadência de ociosidade")
     func onlyIdlenessRaisesTheIdleMaximum() {
         var maximum = MaxIdleCadenceSinceReading(
             atReading: ScheduledCadence(interval: .seconds(180), nature: .base)!
@@ -68,7 +68,7 @@ struct CadenceCycleTests {
         #expect(ScheduledNature.allCases.filter(\.raisesMaxIdleCadence) == [.base, .idle])
     }
 
-    @Test("AC-37: o piso de 60 segundos recusa qualquer cadência agendada menor")
+    @Test("o piso de 60 segundos recusa qualquer cadência agendada menor")
     func theScheduledFloorRefusesAnythingBelowSixtySeconds() {
         #expect(ScheduledCadence.floor == .seconds(60))
         #expect(ScheduledCadence(interval: .seconds(59), nature: .base) == nil)

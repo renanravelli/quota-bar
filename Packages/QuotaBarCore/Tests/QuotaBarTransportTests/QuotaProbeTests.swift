@@ -18,7 +18,7 @@ struct QuotaProbeTests {
         (try? JSONSerialization.jsonObject(with: request.body)) as? [String: Any] ?? [:]
     }
 
-    @Test("ADR-005: a sonda é um POST mínimo, com os cabeçalhos fixados e max_tokens 1")
+    @Test("a sonda é um POST mínimo, com os cabeçalhos fixados e max_tokens 1")
     func theProbeIsTheMinimalDocumentedRequest() async throws {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -36,7 +36,7 @@ struct QuotaProbeTests {
         #expect((body["messages"] as? [[String: Any]])?.count == 1)
     }
 
-    @Test("ADR-005: o User-Agent é montado aqui, com a versão do Claude Code descoberta")
+    @Test("o User-Agent é montado aqui, com a versão do Claude Code descoberta")
     func theUserAgentCarriesTheDiscoveredVersion() async {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -45,7 +45,7 @@ struct QuotaProbeTests {
         #expect(transport.sent.first?.headers["user-agent"] == "claude-code/9.9.9")
     }
 
-    @Test("SEC REQ-14: a credencial viaja só no cabeçalho de autorização")
+    @Test("a credencial viaja só no cabeçalho de autorização")
     func theCredentialTravelsOnlyInTheAuthorizationHeader() async throws {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -62,7 +62,7 @@ struct QuotaProbeTests {
         }
     }
 
-    @Test("Contratos §5: numa sequência em que só a terceira é leitura, o snapshot carrega a primeira candidata")
+    @Test("a sonda entrega a primeira candidata à única leitura de três respostas, e as duas anteriores viram recusa temporária")
     func onlyTheReadingCommitsTheSequence() async {
         let transport = RecordingTransport([
             CannedResponse.serverError(),
@@ -85,7 +85,7 @@ struct QuotaProbeTests {
         #expect(snapshot.readSequence == 1)
     }
 
-    @Test("SEC REQ-15: falha de Keychain chega como falha de Keychain, não como resposta inesperada")
+    @Test("falha de Keychain chega como falha de Keychain, não como resposta inesperada")
     func keychainFailureIsNeverRoutedThroughTheResponse() async {
         let transport = RecordingTransport([CannedResponse.reading()])
 
@@ -100,7 +100,7 @@ struct QuotaProbeTests {
         }
     }
 
-    @Test("AC-23: falha de rede nasce no transporte como falha de comunicação")
+    @Test("falha de rede nasce no transporte como falha de comunicação")
     func networkFailureBecomesCommunicationFailure() async {
         let transport = RecordingTransport(failing: true)
 
@@ -109,7 +109,7 @@ struct QuotaProbeTests {
         #expect(outcome == .probed(.failed(.communicationFailure)))
     }
 
-    @Test("AC-27: o corpo de sucesso não é interpretado — o dado vem só dos cabeçalhos")
+    @Test("o corpo de sucesso não é interpretado — o dado vem só dos cabeçalhos")
     func theSuccessBodyIsDiscarded() async {
         let noise = ProbeHTTPResponse(
             status: 200,
@@ -128,7 +128,7 @@ struct QuotaProbeTests {
         #expect(!String(describing: outcome).contains("CANARIO-DE-SUCESSO"))
     }
 
-    @Test("AC-26: o corpo de erro não sobrevive à classificação")
+    @Test("o corpo de erro não sobrevive ao desfecho da sonda")
     func theErrorBodyDoesNotSurviveClassification() async {
         let canary = "CANARIO-DE-ERRO-8F21"
         let transport = RecordingTransport([
@@ -142,7 +142,7 @@ struct QuotaProbeTests {
         #expect(!String(reflecting: outcome).contains(canary))
     }
 
-    @Test("ADR-005: modelo indisponível recua para o próximo da lista, sem inventar erro de credencial")
+    @Test("modelo indisponível recua para o próximo da lista, sem inventar erro de credencial")
     func anUnavailableModelFallsBackToTheNextOne() async {
         let transport = RecordingTransport([CannedResponse.unknownModel(), CannedResponse.reading()])
 
@@ -157,7 +157,7 @@ struct QuotaProbeTests {
         #expect(models == [ProbeModel.ordered[0], ProbeModel.ordered[1]])
     }
 
-    @Test("AC-24: recusa com evidência de política é bloqueio; sem evidência é recusa")
+    @Test("recusa com evidência de política é bloqueio; sem evidência é recusa")
     func policyEvidenceDecidesTheRefusal() async {
         let blocked = RecordingTransport([CannedResponse.rejected(ProbeResponseFixture.ErrorBody.policyRestriction)])
         let unrecognized = RecordingTransport([CannedResponse.rejected(ProbeResponseFixture.ErrorBody.notJSON)])

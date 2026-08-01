@@ -39,7 +39,7 @@ struct CredentialSetupCompositionTests {
         )
     }
 
-    @Test("QB-SEC-001 AC-50 e QB-SEC-001 AC-10: a superfície que o aplicativo monta verifica por leitura real e grava")
+    @Test("a superfície que o aplicativo monta verifica por leitura real e grava")
     func theSurfaceTheAppBuildsVerifiesAndStores() async {
         let store = RecordingCredentialStore()
         let transport = StubProbeTransport(Self.reading)
@@ -61,7 +61,7 @@ struct CredentialSetupCompositionTests {
         #expect(await changed.notifications == 1)
     }
 
-    @Test("QB-SEC-001 AC-11: a superfície que o aplicativo monta recusa sem gravar quando a origem recusa")
+    @Test("a superfície que o aplicativo monta recusa sem gravar quando a origem recusa")
     func theSurfaceTheAppBuildsStoresNothingOnRefusal() async {
         let store = RecordingCredentialStore()
         let transport = StubProbeTransport(Self.refusal)
@@ -76,7 +76,7 @@ struct CredentialSetupCompositionTests {
         #expect(model.message?.action == .generateNewCredential)
     }
 
-    @Test("QB-SEC-001 AC-4 e QB-SEC-001 AC-14: sem Claude Code descoberto, a superfície bloqueia e nada é requisitado")
+    @Test("sem Claude Code descoberto, a superfície bloqueia e nada é requisitado")
     func theSurfaceTheAppBuildsBlocksWithoutClaudeCode() async {
         let store = RecordingCredentialStore()
         let transport = StubProbeTransport(Self.reading)
