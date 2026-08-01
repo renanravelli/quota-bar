@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Xcode — projeto gerado pelo XcodeGen (ADR-004)
+*.xcodeproj
+*.xcworkspace
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Assinatura e distribuição
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.cer
+ExportOptions.plist
+
+# Segredos — nunca versionar credencial
+.env
+.env.*
+!.env.example
+secrets/
+
+# Claude Code (configuração local, não versionada)
+.claude/
+CLAUDE.md
+
+# Processo e especificações — locais por ora, fora do GitHub
+docs/
+specs/

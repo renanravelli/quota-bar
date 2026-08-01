@@ -1,0 +1,98 @@
+name: QuotaBar
+
+options:
+  bundleIdPrefix: com.renanravelli
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+packages:
+  QuotaBarCore:
+    path: Packages/QuotaBarCore
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ARCHS: arm64
+
+targets:
+  QuotaBar:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/Sources
+      - path: App/Resources/Assets.xcassets
+      - path: App/Resources/DevAssets.xcassets
+    dependencies:
+      - package: QuotaBarCore
+        product: QuotaBarCore
+      - package: QuotaBarCore
+        product: QuotaBarTransport
+    settings:
+      base:
+        PRODUCT_NAME: QuotaBar
+        PRODUCT_BUNDLE_IDENTIFIER: com.renanravelli.QuotaBar
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/QuotaBar.entitlements
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Debug:
+          CODE_SIGN_IDENTITY: "$(QUOTABAR_CODE_SIGN_IDENTITY:default=-)"
+          EXCLUDED_SOURCE_FILE_NAMES: ReleaseProviderFactory.swift
+        Release:
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+          EXCLUDED_SOURCE_FILE_NAMES:
+            - DebugProviderFactory.swift
+            - DevAssets.xcassets
+
+  QuotaBarTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: App/Tests
+    dependencies:
+      - target: QuotaBar
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/QuotaBar.app/Contents/MacOS/QuotaBar"
+        PRODUCT_BUNDLE_IDENTIFIER: com.renanravelli.QuotaBarTests
+        GENERATE_INFOPLIST_FILE: YES
+
+aggregateTargets:
+  VerifySignedEntitlements:
+    targets:
+      - QuotaBar
+    buildScripts:
+      - name: Portão de direitos e arquitetura do binário assinado (ADR-006)
+        basedOnDependencyAnalysis: false
+        script: |
+          "$SRCROOT/Scripts/verify-signed-product.sh" \
+            "$BUILT_PRODUCTS_DIR/QuotaBar.app" \
+            "$CONFIGURATION"
+
+schemes:
+  QuotaBar:
+    build:
+      targets:
+        QuotaBar: all
+        VerifySignedEntitlements: [run, profile, archive, analyze]
+    run:
+      config: Debug
+      executable: QuotaBar
+    test:
+      config: Debug
+      targets:
+        - QuotaBarTests
+    profile:
+      config: Release
+    archive:
+      config: Release
