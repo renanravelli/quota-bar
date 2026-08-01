@@ -1,4 +1,5 @@
 import QuotaBarCore
+import QuotaBarTransport
 
 struct CredentialSetupMessage: Equatable {
     enum UserAction: Equatable {
@@ -30,6 +31,33 @@ enum CredentialSetupText {
     static let cancel = "Cancelar"
     static let replace = "Substituir"
     static let remove = "Remover"
+
+    static let assist = "Conectar agora — o QuotaBar abre a autorização no navegador"
+    static let send = "Enviar"
+
+    static let assistNeedsClaudeCode =
+        "A configuração automática depende do Claude Code, que não foi encontrado nesta máquina."
+
+    static let codeFieldLabel = "Se o navegador exibir um código no formato código#estado, cole-o aqui"
+
+    static let saveBusyWithAssistance =
+        "Há uma configuração automática em curso. Cancele-a para salvar um valor colado à mão."
+
+    static let saveNeedsClaudeCode =
+        "Sem o Claude Code instalado não há leitura possível, e por isso não há como verificar uma credencial."
+
+    static let cost =
+        "Concluir a configuração custa uma requisição da própria cota — a leitura real que verifica a credencial. "
+        + "A configuração automática não acrescenta nenhuma."
+
+    static func waiting(at stage: AssistedSetupProgress) -> String {
+        switch stage {
+        case .launching:
+            "Iniciando a configuração automática."
+        case .waitingForApproval:
+            "A autorização foi aberta no navegador. O QuotaBar aguarda a aprovação."
+        }
+    }
 
     static let configuredNotice =
         "Existe uma credencial configurada. O QuotaBar não a exibe nem a copia — só permite substituí-la ou removê-la."
@@ -66,6 +94,73 @@ enum CredentialSetupText {
         text: "Credencial removida. O QuotaBar volta a declarar a pendência de credencial.",
         action: .nothingToDo
     )
+
+    static let assistedCredentialRefused = CredentialSetupMessage(
+        text: "A origem não aceitou a credencial que a configuração automática obteve. Nada foi guardado. "
+            + "Dá para tentar a conexão de novo, ou usar a via manual aqui ao lado.",
+        action: .tryAgain
+    )
+
+    static let credentialInCodeField = CredentialSetupMessage(
+        text: "Esse valor tem a forma da credencial, e o lugar dele é o campo da credencial. "
+            + "O campo do código espera o valor no formato código#estado que o navegador pode exibir. "
+            + "Nada foi enviado.",
+        action: .tryAgain
+    )
+
+    static let codeInCredentialField = CredentialSetupMessage(
+        text: "Esse valor tem a forma do código que o navegador exibe, e o lugar dele é o campo do código, "
+            + "oferecido enquanto a configuração automática espera. O campo da credencial espera o valor que "
+            + "começa com sk-ant-oat01-. Nada foi enviado e nada foi guardado.",
+        action: .tryAgain
+    )
+
+    static func message(for cause: AssistedSetupUnavailability) -> CredentialSetupMessage {
+        let sentences = cause.mayMentionBrowserOrCode
+            ? [summary(of: cause), browserCodeNote, wayForward(after: cause)]
+            : [summary(of: cause), wayForward(after: cause)]
+
+        return CredentialSetupMessage(
+            text: sentences.joined(separator: " "),
+            action: cause == .claudeCodeNotFound ? .installClaudeCode : .tryAgain
+        )
+    }
+
+    static func message(for outcome: VerificationOutcome, obtainedByAssistance: Bool) -> CredentialSetupMessage {
+        let refusedCredential = outcome == .credentialRejected || outcome == .credentialExpired
+        guard obtainedByAssistance, refusedCredential else { return message(for: outcome) }
+
+        return assistedCredentialRefused
+    }
+
+    private static let browserCodeNote =
+        "O navegador pode ter exibido um código pedindo para colá-lo em um terminal: não há terminal nenhum "
+        + "neste percurso, e o lugar dele era o campo desta tela, enquanto a espera durava."
+
+    private static func summary(of cause: AssistedSetupUnavailability) -> String {
+        switch cause {
+        case .claudeCodeNotFound:
+            "O Claude Code não foi encontrado, então a configuração automática não chegou a ser conduzida. "
+                + "Nada foi guardado."
+        case .launchFailed:
+            "O QuotaBar não conseguiu conduzir a configuração automática. Nada foi guardado."
+        case .silentBeforeAnySign:
+            "A configuração automática não chegou a começar: não veio sinal de vida nenhum. Nada foi guardado."
+        case .refusedByPolicy:
+            "Uma política desta máquina ou desta conta barrou a configuração automática. Nada foi guardado."
+        case .endedWithoutCredential:
+            "A configuração automática terminou sem uma credencial que o QuotaBar pudesse usar. Nada foi guardado."
+        case .approvalTimedOut:
+            "O QuotaBar parou de esperar pela aprovação. Nada foi guardado, e não dá para afirmar que nada "
+                + "tenha sido criado do outro lado."
+        }
+    }
+
+    private static func wayForward(after cause: AssistedSetupUnavailability) -> String {
+        cause == .claudeCodeNotFound
+            ? "Instale o Claude Code para continuar."
+            : "Dá para tentar de novo, ou seguir pela via manual apresentada aqui."
+    }
 
     static func message(for outcome: VerificationOutcome) -> CredentialSetupMessage {
         switch outcome {

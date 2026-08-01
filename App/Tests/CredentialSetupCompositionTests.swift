@@ -34,6 +34,7 @@ struct CredentialSetupCompositionTests {
             credentials: store,
             transport: transport,
             environment: StubClaudeCodeEnvironment(version: version),
+            spawner: UnavailablePseudoTerminal(),
             credentialDidChange: credentialDidChange.notify
         )
     }

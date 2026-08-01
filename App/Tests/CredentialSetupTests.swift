@@ -34,15 +34,15 @@ struct CredentialSetupTests {
         #expect(clipboard.copied == ["claude setup-token"])
     }
 
-    @Test("QB-SEC-001 AC-4: sem Claude Code a pendência vem antes, e salvar fica indisponível")
-    func withoutClaudeCodeThePrecondtionComesFirst() async {
+    @Test("sem Claude Code a pendência vem antes de tudo, e salvar fica indisponível com o motivo dito")
+    func withoutClaudeCodeThePreconditionComesFirst() async {
         let content = await Setup.opened(discovery: .notFound).content
 
         #expect(content.stage == .blockedByPrecondition)
         #expect(content.precondition != nil)
         #expect(content.precondition?.contains("Claude Code") == true)
         #expect(!content.canSave)
-        #expect(!content.showsField)
+        #expect(content.saveDisabledReason != nil)
     }
 
     @Test("QB-SEC-001 AC-5: instalar o Claude Code libera a superfície sem reiniciar o aplicativo")
@@ -51,6 +51,7 @@ struct CredentialSetupTests {
         let model = CredentialSetupModel(
             store: RecordingCredentialStore(),
             verifier: GatedVerifier(.success),
+            acquirer: StubAssistedAcquirer(),
             claudeCode: { await discovery.read() },
             credentialDidChange: CredentialChangeSpy().notify,
             clipboard: SpyClipboard()
@@ -77,7 +78,7 @@ struct CredentialSetupTests {
         #expect(await store.storeCount == 0)
         #expect(await verifier.calls == 0)
         #expect(model.stage == .blockedByPrecondition)
-        #expect(model.message == CredentialSetupText.message(for: .claudeCodeNotFound))
+        #expect(model.message == CredentialSetupText.message(for: VerificationOutcome.claudeCodeNotFound))
     }
 
     @Test("QB-SEC-001 AC-7: forma inválida é recusada sem rede e sem gravar, declarando o que se esperava")
@@ -347,7 +348,7 @@ struct CredentialSetupTests {
         #expect(outcomes.count == 7)
         #expect(Set(all.map(\.text)).count == all.count)
         #expect(all.allSatisfy { !$0.text.isEmpty })
-        #expect(CredentialSetupText.message(for: .claudeCodeNotFound).action == .installClaudeCode)
+        #expect(CredentialSetupText.message(for: VerificationOutcome.claudeCodeNotFound).action == .installClaudeCode)
         #expect(CredentialSetupText.message(for: .credentialRejected).action == .generateNewCredential)
         #expect(CredentialSetupText.message(for: .credentialExpired).action == .generateNewCredential)
         #expect(CredentialSetupText.message(for: .communicationFailure).action == .waitForNetwork)

@@ -7,6 +7,7 @@ struct CredentialSetupView: View {
 
     @Environment(\.colorSchemeContrast) private var contrast
     @State private var pasted = ""
+    @State private var authorizationCode = ""
     @State private var hasEntered = false
 
     private var content: CredentialSetupContent {
@@ -33,9 +34,18 @@ struct CredentialSetupView: View {
                 bodyText(notice)
             }
 
+            assistance
+
             if content.showsField {
                 instructions
                 credentialField
+                if let reason = content.saveDisabledReason {
+                    bodyText(reason).foregroundStyle(secondaryStyle)
+                }
+            }
+
+            if let cost = content.costNotice {
+                bodyText(cost).foregroundStyle(secondaryStyle)
             }
 
             if let message = content.message {
@@ -63,7 +73,49 @@ struct CredentialSetupView: View {
         .onDisappear {
             model.cancel()
             pasted = ""
+            authorizationCode = ""
         }
+    }
+
+    private var assistance: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let assistTitle = content.assistTitle {
+                Button(assistTitle) { Task { await model.assist() } }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityLabel(Text(assistTitle))
+            }
+
+            if let reason = content.assistUnavailableReason {
+                bodyText(reason).foregroundStyle(secondaryStyle)
+            }
+
+            if let waitingNotice = content.waitingNotice {
+                bodyText(waitingNotice)
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
+
+            if let codeFieldLabel = content.codeFieldLabel {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(codeFieldLabel)
+                        .font(.footnote)
+                        .foregroundStyle(secondaryStyle)
+                    HStack(spacing: 8) {
+                        TextField(codeFieldLabel, text: $authorizationCode)
+                            .textFieldStyle(.roundedBorder)
+                            .labelsHidden()
+                            .accessibilityLabel(Text(codeFieldLabel))
+                        Button(CredentialSetupText.send) { sendCode() }
+                            .disabled(authorizationCode.isEmpty)
+                    }
+                }
+            }
+        }
+    }
+
+    private func sendCode() {
+        let value = authorizationCode
+        authorizationCode = ""
+        Task { await model.submitCode(value) }
     }
 
     private var instructions: some View {

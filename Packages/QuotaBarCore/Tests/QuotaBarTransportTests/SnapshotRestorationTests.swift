@@ -65,7 +65,7 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading()],
             store: Relaunch.restorable(age: 180, readSequence: 4)
         )
-        await harness.settle()
+        #expect(await harness.waitForPublications(1))
 
         let restored = try #require(harness.published.first)
         #expect(restored.snapshot?.readAt == ProviderHarness.start.addingTimeInterval(-180))
@@ -79,7 +79,7 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading()],
             store: Relaunch.restorable(age: 180, readSequence: 4)
         )
-        await harness.settle()
+        #expect(await harness.waitForPublications(1))
 
         let restored = try #require(harness.published.first)
         var latch = DeferralLatch()
@@ -93,7 +93,7 @@ struct SnapshotRestorationTests {
     func everySuccessfulReadingIsPersisted() async throws {
         let store = InMemorySnapshotStore()
         let harness = ProviderHarness(responses: [CannedResponse.reading()], store: store)
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         let persisted = try #require(store.current)
         #expect(persisted == harness.latest?.snapshot)
@@ -107,7 +107,7 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading()],
             store: Relaunch.restorable(age: 180)
         )
-        await harness.settle()
+        #expect(await harness.waitForPublications(1))
 
         let restored = try #require(harness.published.first)
         #expect(restored.maxIdleCadenceSinceReading == ProbePlanner.baseInterval)
@@ -124,7 +124,7 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading()],
             store: Relaunch.restorable(age: 11 * 60)
         )
-        await harness.settle()
+        #expect(await harness.waitForPublications(1))
 
         let restored = try #require(harness.published.first)
         #expect(restored.maxIdleCadenceSinceReading == ProbePlanner.baseInterval)
@@ -142,7 +142,7 @@ struct SnapshotRestorationTests {
             store: InMemorySnapshotStore()
         )
 
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         let initial = try #require(harness.published.first)
         #expect(initial.snapshot == nil)
@@ -156,10 +156,9 @@ struct SnapshotRestorationTests {
         temporary.write(Data("{ \"version\": 1, \"fiveHour\":".utf8))
 
         let harness = ProviderHarness(responses: [CannedResponse.reading()], store: temporary.store)
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         #expect(harness.published.first?.snapshot == nil)
-        #expect(harness.latest?.snapshot?.readSequence == 1)
     }
 
     @Test("AC-32: sequência no extremo do domínio, vinda do arquivo, não derruba as leituras seguintes")
@@ -170,11 +169,11 @@ struct SnapshotRestorationTests {
                 StoredReadingFixture.snapshot(readSequence: .max - 1, readAt: ProviderHarness.start)
             )
         )
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: .max))
         let first = try #require(harness.latest?.snapshot?.readSequence)
 
         harness.clock.advance(by: 900)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForState { $0.snapshot?.readSequence != first })
         let second = try #require(harness.latest?.snapshot?.readSequence)
 
         #expect(first == .max)
@@ -187,7 +186,7 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading()],
             store: Relaunch.restorable(age: 11 * 60, readSequence: 1)
         )
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 2))
 
         let restored = try #require(harness.published.first?.snapshot)
         let fresh = try #require(harness.latest?.snapshot)
@@ -222,7 +221,7 @@ struct SnapshotRestorationTests {
         await temporary.store.persist(closed.reading)
 
         let harness = ProviderHarness(responses: [CannedResponse.reading()], store: temporary.store)
-        await harness.settle()
+        #expect(await harness.waitForPublications(1))
 
         let restored = try #require(harness.published.first)
         var latch = DeferralLatch()
@@ -246,10 +245,10 @@ struct SnapshotRestorationTests {
             responses: [CannedResponse.reading(), Relaunch.rejection(carrying: Relaunch.errorBodyCanary)],
             store: temporary.store
         )
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.clock.advance(by: 180)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.credentialRejected) })
 
         let data = try #require(temporary.contents)
         let text = try #require(String(data: data, encoding: .utf8))

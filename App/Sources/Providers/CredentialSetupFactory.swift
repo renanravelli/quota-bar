@@ -12,6 +12,7 @@ enum CredentialSetupFactory {
             credentials: KeychainCredentialStore(),
             transport: URLSessionProbeTransport(),
             environment: SystemClaudeCodeEnvironment(),
+            spawner: SystemPseudoTerminal(),
             credentialDidChange: credentialDidChange
         )
     }
@@ -20,6 +21,7 @@ enum CredentialSetupFactory {
         credentials: any CredentialStoring,
         transport: any ProbeTransporting,
         environment: any ClaudeCodeEnvironment,
+        spawner: any PseudoTerminalSpawning,
         credentialDidChange: @escaping @Sendable () async -> Void
     ) -> CredentialSetupModel {
         let locator = ClaudeCodeLocator(environment: environment)
@@ -29,6 +31,10 @@ enum CredentialSetupFactory {
             verifier: ProbeCredentialVerifier(
                 probe: QuotaProbe(transport: transport, credentials: credentials),
                 locator: locator
+            ),
+            acquirer: SetupTokenCredentialAcquirer(
+                discover: { await locator.discover() },
+                spawner: spawner
             ),
             claudeCode: { await locator.discover() },
             credentialDidChange: credentialDidChange

@@ -13,6 +13,7 @@ struct Publication: Sendable {
 
 private final class StateCollector: Sendable {
     private let published = OSAllocatedUnfairLock(initialState: [Publication]())
+    private let exhausted = OSAllocatedUnfairLock(initialState: false)
 
     var all: [Publication] {
         published.withLock { $0 }
@@ -22,11 +23,16 @@ private final class StateCollector: Sendable {
         all.last?.state
     }
 
+    var sawTheStreamFinish: Bool {
+        exhausted.withLock { $0 }
+    }
+
     func consume(_ states: AsyncStream<QuotaState>, clock: ControlledClock) async {
         for await state in states {
             let stamped = Publication(state: state, at: clock.now)
             published.withLock { $0.append(stamped) }
         }
+        exhausted.withLock { $0 = true }
     }
 }
 
@@ -37,6 +43,7 @@ final class ProviderHarness {
     let transport: RecordingTransport
     let claudeCode: StubClaudeCode
     let power = SilentPowerEvents()
+    let lifecycle: ProbeLifecycle
     let provider: ProbingQuotaStateProvider
 
     private let collector = StateCollector()
@@ -59,7 +66,7 @@ final class ProviderHarness {
         transport = RecordingTransport(responses)
         claudeCode = StubClaudeCode(version: version)
 
-        let lifecycle = ProbeLifecycle(observing: power, activity: InertActivity(), time: clock)
+        lifecycle = ProbeLifecycle(observing: power, activity: InertActivity(), time: clock)
         provider = ProbingQuotaStateProvider(
             probe: QuotaProbe(transport: transport, credentials: credentials),
             credentials: credentials,
@@ -75,7 +82,7 @@ final class ProviderHarness {
         let collector = collector
         let clock = clock
         collecting = Task { await collector.consume(states, clock: clock) }
-        lifecycleRunning = Task { await lifecycle.run() }
+        lifecycleRunning = Task { [lifecycle] in await lifecycle.run() }
         running = Task { [provider] in await provider.run() }
     }
 
@@ -84,23 +91,43 @@ final class ProviderHarness {
         running.cancel()
         lifecycleRunning.cancel()
         collecting.cancel()
+        clock.releaseWaiters()
     }
 
-    @discardableResult
-    func waitForProbes(_ count: Int) async -> Bool {
-        await waitUntil { [transport] in transport.sentCount >= count }
+    func waitForReading(sequence: UInt64) async -> Bool {
+        await waitForState { $0.snapshot?.readSequence == sequence }
     }
 
-    func waitUntil(_ condition: @Sendable () -> Bool) async -> Bool {
+    func waitForState(_ satisfies: @Sendable (QuotaState) -> Bool) async -> Bool {
+        await waitUntil { [collector] in collector.latest.map(satisfies) ?? false }
+    }
+
+    func waitForPublications(_ count: Int) async -> Bool {
+        await waitUntil { [collector] in collector.all.count >= count }
+    }
+
+    func waitUntilProbingRests() async -> Bool {
+        await waitUntil { [clock] in clock.isAwaitingFutureDeadline }
+    }
+
+    func waitUntilProbingIsSuspended() async -> Bool {
+        await waitUntil { [lifecycle] in await !lifecycle.allowsProbing }
+    }
+
+    func cancelRun() {
+        running.cancel()
+    }
+
+    func waitUntilStatesFinish() async -> Bool {
+        await waitUntil { [collector] in collector.sawTheStreamFinish }
+    }
+
+    func waitUntil(_ condition: @Sendable () async -> Bool) async -> Bool {
         for _ in 0..<600 {
-            if condition() { await settle(); return true }
+            if await condition() { return true }
             try? await Task.sleep(for: .milliseconds(5))
         }
-        return false
-    }
-
-    func settle() async {
-        try? await Task.sleep(for: .milliseconds(40))
+        return await condition()
     }
 }
 
@@ -110,7 +137,7 @@ struct ProbingQuotaStateProviderTests {
     func aReadingBecomesPublishedState() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
 
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         let state = try #require(harness.latest)
         #expect(state.credentialPresent)
@@ -125,13 +152,13 @@ struct ProbingQuotaStateProviderTests {
     @Test("AC-17 e AC-19: passar a observar muda o regime e não provoca leitura")
     func observingChangesTheRegimeWithoutReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         for _ in 0..<10 {
             await harness.provider.setViewerObserving(true)
             await harness.provider.setViewerObserving(false)
         }
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
 
         #expect(harness.transport.sentCount == 1)
         #expect(harness.latest?.cycle?.cadence.interval == ProbePlanner.baseInterval)
@@ -140,16 +167,16 @@ struct ProbingQuotaStateProviderTests {
     @Test("AC-36 de QB-APP-001: com o observador presente a cadência volta ao ritmo base")
     func theViewerRestoresTheBaseCadence() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.clock.advance(by: 180)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 2))
         #expect(harness.latest?.cycle?.cadence.nature == .idle)
 
         await harness.provider.setViewerObserving(true)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.cycle?.cadence.nature == .base })
+        #expect(await harness.waitUntilProbingRests())
 
-        #expect(harness.latest?.cycle?.cadence.nature == .base)
         #expect(harness.latest?.cycle?.cadence.interval == ProbePlanner.baseInterval)
         #expect(harness.transport.sentCount == 2)
     }
@@ -157,41 +184,42 @@ struct ProbingQuotaStateProviderTests {
     @Test("REQ-11: pedir leitura agora provoca exatamente uma leitura, respeitado o piso")
     func refreshNowAsksForExactlyOneReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading(), CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         await harness.provider.refreshNow()
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
         #expect(harness.transport.sentCount == 1)
 
         harness.clock.advance(by: 60)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 2))
         #expect(harness.transport.sentCount == 2)
     }
 
     @Test("AC-28: recusa de credencial interrompe as leituras periódicas até ação do usuário")
     func refusalStopsPeriodicProbing() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.rejected(), CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.credentialRejected) })
 
         harness.clock.advance(by: 3_600)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
 
         #expect(harness.transport.sentCount == 1)
-        #expect(harness.latest?.lastAttempt == .failed(.credentialRejected))
         #expect(harness.latest?.cycle == nil)
 
         await harness.provider.refreshNow()
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 1))
+        #expect(harness.transport.sentCount == 2)
         #expect(harness.latest?.cycle != nil)
     }
 
     @Test("AC-3: sem Claude Code descoberto, nenhuma leitura é realizada")
     func withoutClaudeCodeNothingIsRead() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.claudeCodeNotFound) })
+        #expect(await harness.waitUntilProbingRests())
 
         harness.clock.advance(by: 3_600)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
 
         #expect(harness.transport.sentCount == 0)
         #expect(harness.latest?.cycle == nil)
@@ -201,11 +229,10 @@ struct ProbingQuotaStateProviderTests {
     @Test("AC-49 de QB-APP-001: sem Claude Code, a pendência é publicada com a credencial configurada")
     func theClaudeCodePendencyIsPublished() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.pendencies == [.claudeCode] })
 
         let state = try #require(harness.latest)
         #expect(state.credentialPresent)
-        #expect(state.pendencies == [.claudeCode])
         #expect(state.lastAttempt == .failed(.claudeCodeNotFound))
         #expect(harness.transport.sentCount == 0)
     }
@@ -217,21 +244,20 @@ struct ProbingQuotaStateProviderTests {
             credentials: StubCredentials.failing(.itemNotFound),
             version: nil
         )
-        await harness.settle()
+        #expect(await harness.waitForState { $0.pendencies == [.credential, .claudeCode] })
 
-        #expect(harness.latest?.pendencies == [.credential, .claudeCode])
         #expect(harness.transport.sentCount == 0)
     }
 
     @Test("AC-2: instalar o Claude Code em execução limpa a pendência e a leitura volta a acontecer")
     func installingClaudeCodeClearsThePendency() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()], version: nil)
-        await harness.settle()
-        #expect(harness.latest?.pendencies == [.claudeCode])
+        #expect(await harness.waitForState { $0.pendencies == [.claudeCode] })
+        #expect(await harness.waitUntilProbingRests())
 
         harness.claudeCode.install(version: "2.1.220 (Claude Code)")
         harness.clock.advance(by: 180)
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         #expect(harness.latest?.pendencies.isEmpty == true)
         #expect(harness.latest?.source == .primaryProbe)
@@ -243,9 +269,11 @@ struct ProbingQuotaStateProviderTests {
             responses: [CannedResponse.reading()],
             credentials: StubCredentials.failing(.itemNotFound)
         )
-        await harness.settle()
+        #expect(await harness.waitForState { $0.pendencies == [.credential] })
+        #expect(await harness.waitUntilProbingRests())
+
         harness.clock.advance(by: 3_600)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
 
         let state = try #require(harness.latest)
         #expect(!state.credentialPresent)
@@ -259,15 +287,15 @@ struct ProbingQuotaStateProviderTests {
     func configuringAfterAnEmptyFirstRunResumesProbing() async throws {
         let credentials = SwitchableCredentials()
         let harness = ProviderHarness(responses: [CannedResponse.reading()], credentials: credentials)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.pendencies == [.credential] })
+        #expect(await harness.waitUntilProbingRests())
 
-        #expect(harness.latest?.pendencies == [.credential])
         #expect(harness.transport.sentCount == 0)
 
         _ = await credentials.store(try #require(SubscriptionToken(pasted: StubCredentials.pasted)))
         harness.clock.advance(by: 180)
 
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
         #expect(harness.latest?.credentialPresent == true)
         #expect(harness.latest?.pendencies.isEmpty == true)
         #expect(harness.latest?.snapshot != nil)
@@ -277,13 +305,14 @@ struct ProbingQuotaStateProviderTests {
     func savingTheCredentialProbesWithoutWaitingForTheNextCycle() async throws {
         let credentials = SwitchableCredentials()
         let harness = ProviderHarness(responses: [CannedResponse.reading()], credentials: credentials)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.pendencies == [.credential] })
+        #expect(await harness.waitUntilProbingRests())
         #expect(harness.transport.sentCount == 0)
 
         _ = await credentials.store(try #require(SubscriptionToken(pasted: StubCredentials.pasted)))
         await harness.provider.refreshNow()
 
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
         #expect(harness.latest?.snapshot != nil)
         #expect(harness.latest?.cycle?.cadence.nature == .base)
     }
@@ -294,9 +323,8 @@ struct ProbingQuotaStateProviderTests {
             responses: [CannedResponse.reading()],
             credentials: StubCredentials.failing(.authorizationDenied)
         )
-        await harness.settle()
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.credentialUnreadable) })
 
-        #expect(harness.latest?.lastAttempt == .failed(.credentialUnreadable))
         #expect(harness.transport.sentCount == 0)
     }
 
@@ -306,12 +334,12 @@ struct ProbingQuotaStateProviderTests {
             CannedResponse.reading(),
             CannedResponse.throttled(retryAfterSeconds: 600)
         ])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.clock.advance(by: 180)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.communicationFailure) })
 
-        #expect(harness.latest?.lastAttempt == .failed(.communicationFailure))
+        #expect(harness.transport.sentCount == 2)
         #expect(harness.latest?.cycle?.cadence.nature == .widenedByFailure)
         #expect(harness.latest?.cycle?.cadence.interval == .seconds(600))
     }
@@ -322,12 +350,11 @@ struct ProbingQuotaStateProviderTests {
             CannedResponse.reading(),
             CannedResponse.reading(.exhausted, status: 429)
         ])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.clock.advance(by: 180)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 2))
 
-        #expect(harness.latest?.snapshot?.readSequence == 2)
         #expect(harness.latest?.cycle?.cadence.nature != .widenedByFailure)
         if case .succeeded = harness.latest?.lastAttempt {} else {
             Issue.record("cota esgotada com dado é leitura bem-sucedida")
@@ -341,19 +368,20 @@ struct ProbingQuotaStateProviderTests {
         #expect(await harness.waitUntil { credentials.parked })
 
         harness.power.send(.willSleep)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingIsSuspended())
+
         credentials.open()
-        await harness.settle()
+        #expect(await harness.waitForState { $0.cycle?.cadence.nature == .base })
+        #expect(await harness.waitUntilProbingRests())
 
         #expect(harness.transport.sentCount == 0)
         #expect(harness.latest?.lastAttempt == .inProgress)
-        #expect(harness.latest?.cycle?.cadence.nature == .base)
     }
 
     @Test("AC-20, AC-43 e AC-44: durante a espera, cinco minutos declaram adiamento e quatro não")
     func theConditionIsObservedDuringTheWaitAndNotAfterTheReading() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         let published = try #require(harness.latest)
         let readAt = ProviderHarness.start
@@ -377,16 +405,17 @@ struct ProbingQuotaStateProviderTests {
             CannedResponse.reading(),
             CannedResponse.reading(afterTheSleep)
         ])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.power.send(.willSleep)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingIsSuspended())
+
         harness.clock.advance(by: 8 * 3_600)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
         #expect(harness.transport.sentCount == 1)
 
         harness.power.send(.didWake)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 2))
 
         var latch = DeferralLatch()
         let natures = harness.publications.compactMap { $0.state.cadence(at: $0.at, latch: &latch)?.nature }
@@ -399,13 +428,16 @@ struct ProbingQuotaStateProviderTests {
     @Test("AC-38 e AC-52: depois da retomada, cinco minutos de espera voltam a ser adiamento e quatro não")
     func deferralHoldsAgainAfterTheMachineWakesUp() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
+        let cycleBeforeTheSleep = try #require(harness.latest?.cycle?.id)
         harness.power.send(.willSleep)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingIsSuspended())
+
         harness.clock.advance(by: 10)
         harness.power.send(.didWake)
-        await harness.settle()
+        #expect(await harness.waitForState { $0.cycle?.id != cycleBeforeTheSleep })
+        #expect(await harness.waitUntilProbingRests())
         #expect(harness.transport.sentCount == 1)
 
         let wake = ProviderHarness.start.addingTimeInterval(10)
@@ -422,25 +454,37 @@ struct ProbingQuotaStateProviderTests {
     @Test("AC-39: leitura pontual sob ociosidade não vira adiamento quando o observador chega no fim do ciclo")
     func aPunctualReadingIsNotDeferredAfterTheViewerRestoresTheBaseCadence() async throws {
         let harness = ProviderHarness(responses: [CannedResponse.reading()])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
-        var probes = 1
+        var readings: UInt64 = 1
         for interval in [180.0, 360.0, 720.0] {
             harness.clock.advance(by: interval)
-            probes += 1
-            #expect(await harness.waitForProbes(probes))
+            readings += 1
+            #expect(await harness.waitForReading(sequence: readings))
         }
         #expect(harness.latest?.cycle?.cadence.interval == ProbePlanner.idleCeiling)
 
         harness.clock.advance(by: 780)
         await harness.provider.setViewerObserving(true)
-        await harness.settle()
-        #expect(harness.transport.sentCount == probes)
+        #expect(await harness.waitUntilProbingRests())
+        #expect(harness.transport.sentCount == Int(readings))
 
         harness.clock.advance(by: 120)
-        #expect(await harness.waitForProbes(probes + 1))
+        #expect(await harness.waitForReading(sequence: readings + 1))
 
         #expect(harness.latest?.cycle?.cadence.nature == .base)
+    }
+
+    @Test("cancelar enquanto a espera repousa sem prazo encerra o provedor e termina o fluxo de estados")
+    func cancellingWhileWaitingWithoutADeadlineEndsTheProvider() async throws {
+        let harness = ProviderHarness(responses: [CannedResponse.rejected()])
+        #expect(await harness.waitForState { $0.lastAttempt == .failed(.credentialRejected) })
+        #expect(await harness.waitUntilProbingRests())
+        #expect(harness.clock.awaitedDeadlines == [.distantFuture])
+
+        harness.cancelRun()
+
+        #expect(await harness.waitUntilStatesFinish())
     }
 
     @Test("AC-7: janela limitante ausente é publicada como indisponível, nunca deduzida")
@@ -450,7 +494,7 @@ struct ProbingQuotaStateProviderTests {
         fixture.sevenDayReset = nil
 
         let harness = ProviderHarness(responses: [CannedResponse.reading(fixture)])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         let state = try #require(harness.latest)
         #expect(state.snapshot?.bindingWindow == nil)
@@ -466,17 +510,18 @@ struct ProbingQuotaStateProviderTests {
             CannedResponse.reading(),
             CannedResponse.reading()
         ])
-        #expect(await harness.waitForProbes(1))
+        #expect(await harness.waitForReading(sequence: 1))
 
         harness.power.send(.willSleep)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingIsSuspended())
+
         harness.clock.advance(by: 7_200)
-        await harness.settle()
+        #expect(await harness.waitUntilProbingRests())
         #expect(harness.transport.sentCount == 1)
 
         let publishedBeforeWake = harness.published.count
         harness.power.send(.didWake)
-        #expect(await harness.waitForProbes(2))
+        #expect(await harness.waitForReading(sequence: 2))
 
         let afterWake = harness.published.dropFirst(publishedBeforeWake)
         #expect(afterWake.contains { $0.cycle?.cadence.nature == .base })

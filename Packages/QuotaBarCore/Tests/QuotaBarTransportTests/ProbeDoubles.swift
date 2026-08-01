@@ -184,23 +184,78 @@ final class GatedCredentials: CredentialStoring, Sendable {
 }
 
 final class ControlledClock: DateProviding, DeadlineWaiting, Sendable {
-    private let instant: OSAllocatedUnfairLock<Date>
+    private struct Sleeper {
+        let deadline: Date
+        let continuation: CheckedContinuation<Void, Never>
+    }
+
+    private struct Schedule {
+        var instant: Date
+        var sleepers: [Int: Sleeper] = [:]
+        var interrupted: Set<Int> = []
+        var lastTicket = 0
+    }
+
+    private let schedule: OSAllocatedUnfairLock<Schedule>
 
     init(at instant: Date) {
-        self.instant = OSAllocatedUnfairLock(initialState: instant)
+        schedule = OSAllocatedUnfairLock(initialState: Schedule(instant: instant))
     }
 
     var now: Date {
-        instant.withLock { $0 }
+        schedule.withLock { $0.instant }
+    }
+
+    var isAwaitingFutureDeadline: Bool {
+        schedule.withLock { schedule in schedule.sleepers.values.contains { $0.deadline > schedule.instant } }
+    }
+
+    var awaitedDeadlines: [Date] {
+        schedule.withLock { $0.sleepers.values.map(\.deadline) }
     }
 
     func advance(by seconds: TimeInterval) {
-        instant.withLock { $0 = $0.addingTimeInterval(seconds) }
+        let reached = schedule.withLock { schedule -> [CheckedContinuation<Void, Never>] in
+            schedule.instant = schedule.instant.addingTimeInterval(seconds)
+            let due = schedule.sleepers.filter { $0.value.deadline <= schedule.instant }
+            due.keys.forEach { schedule.sleepers.removeValue(forKey: $0) }
+            return due.values.map(\.continuation)
+        }
+        reached.forEach { $0.resume() }
+    }
+
+    func releaseWaiters() {
+        let pending = schedule.withLock { schedule -> [CheckedContinuation<Void, Never>] in
+            defer { schedule.sleepers.removeAll() }
+            return schedule.sleepers.values.map(\.continuation)
+        }
+        pending.forEach { $0.resume() }
     }
 
     func wait(until deadline: Date) async {
-        while !Task.isCancelled, now < deadline {
-            try? await Task.sleep(for: .milliseconds(1))
+        let ticket = schedule.withLock { schedule -> Int in
+            schedule.lastTicket += 1
+            return schedule.lastTicket
+        }
+
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                let elapsed = schedule.withLock { schedule -> Bool in
+                    guard schedule.interrupted.remove(ticket) == nil, schedule.instant < deadline else { return true }
+                    schedule.sleepers[ticket] = Sleeper(deadline: deadline, continuation: continuation)
+                    return false
+                }
+                if elapsed { continuation.resume() }
+            }
+        } onCancel: {
+            let interrupted = schedule.withLock { schedule -> CheckedContinuation<Void, Never>? in
+                guard let sleeper = schedule.sleepers.removeValue(forKey: ticket) else {
+                    schedule.interrupted.insert(ticket)
+                    return nil
+                }
+                return sleeper.continuation
+            }
+            interrupted?.resume()
         }
     }
 }

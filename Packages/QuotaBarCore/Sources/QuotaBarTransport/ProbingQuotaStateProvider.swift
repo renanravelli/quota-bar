@@ -87,7 +87,11 @@ public actor ProbingQuotaStateProvider: QuotaStateProviding {
 
         let waiting = Task { [waiter] in await waiter.wait(until: deadline) }
         pendingWait = waiting
-        await waiting.value
+        await withTaskCancellationHandler {
+            await waiting.value
+        } onCancel: {
+            waiting.cancel()
+        }
         pendingWait = nil
     }
 

@@ -161,6 +161,84 @@ final class SpyClipboard: CommandCopying {
     }
 }
 
+struct UnavailablePseudoTerminal: PseudoTerminalSpawning {
+    func spawn(_ command: TerminalCommand) throws -> any PseudoTerminalSession {
+        throw PseudoTerminalFailure.cannotLaunch
+    }
+}
+
+actor StubAssistedAcquirer: AssistedCredentialAcquiring {
+    enum Script: Sendable {
+        case obtains(String)
+        case unavailable(AssistedSetupUnavailability)
+    }
+
+    private(set) var acquisitions = 0
+    private(set) var submittedCodes: [String] = []
+
+    private var script: Script
+    private var submissionResponse: CodeSubmission
+    private let reachesApproval: Bool
+    private let isGated: Bool
+    private var waiting: CheckedContinuation<Void, Never>?
+    private var isReleased = false
+
+    init(
+        _ script: Script = .obtains(credentialCanary),
+        reachesApproval: Bool = true,
+        gated: Bool = false,
+        answersSubmissionWith submissionResponse: CodeSubmission = .delivered
+    ) {
+        self.script = script
+        self.reachesApproval = reachesApproval
+        self.isGated = gated
+        self.submissionResponse = submissionResponse
+    }
+
+    func rewrite(_ next: Script) {
+        script = next
+    }
+
+    func release() {
+        isReleased = true
+        waiting?.resume()
+        waiting = nil
+    }
+
+    func acquire(
+        onProgress: @escaping @Sendable (AssistedSetupProgress) -> Void
+    ) async -> AssistedSetupOutcome {
+        acquisitions += 1
+        onProgress(.launching)
+        if reachesApproval { onProgress(.waitingForApproval) }
+
+        if isGated, !isReleased {
+            await withTaskCancellationHandler {
+                await withCheckedContinuation { waiting = $0 }
+            } onCancel: {
+                Task { await self.release() }
+            }
+        }
+
+        if Task.isCancelled { return .cancelled }
+
+        switch script {
+        case .obtains(let value):
+            guard let token = SubscriptionToken(pasted: value) else {
+                return .unavailable(.endedWithoutCredential)
+            }
+            return .obtained(token)
+        case .unavailable(let cause):
+            return .unavailable(cause)
+        }
+    }
+
+    func submit(code: String) async -> CodeSubmission {
+        if submissionResponse == .delivered { submittedCodes.append(code) }
+        return submissionResponse
+    }
+}
+
 @MainActor
 enum Setup {
     static let installed = ClaudeCodeDiscovery.installed(
@@ -173,6 +251,7 @@ enum Setup {
     static func model(
         store: RecordingCredentialStore = RecordingCredentialStore(),
         verifier: GatedVerifier = GatedVerifier(.success),
+        acquirer: StubAssistedAcquirer = StubAssistedAcquirer(),
         discovery: ClaudeCodeDiscovery = Setup.installed,
         clipboard: SpyClipboard = SpyClipboard(),
         credentialDidChange: CredentialChangeSpy = CredentialChangeSpy()
@@ -180,6 +259,7 @@ enum Setup {
         CredentialSetupModel(
             store: store,
             verifier: verifier,
+            acquirer: acquirer,
             claudeCode: { discovery },
             credentialDidChange: credentialDidChange.notify,
             clipboard: clipboard
@@ -189,6 +269,7 @@ enum Setup {
     static func opened(
         store: RecordingCredentialStore = RecordingCredentialStore(),
         verifier: GatedVerifier = GatedVerifier(.success),
+        acquirer: StubAssistedAcquirer = StubAssistedAcquirer(),
         discovery: ClaudeCodeDiscovery = Setup.installed,
         clipboard: SpyClipboard = SpyClipboard(),
         credentialDidChange: CredentialChangeSpy = CredentialChangeSpy()
@@ -196,6 +277,7 @@ enum Setup {
         let model = model(
             store: store,
             verifier: verifier,
+            acquirer: acquirer,
             discovery: discovery,
             clipboard: clipboard,
             credentialDidChange: credentialDidChange
@@ -206,6 +288,18 @@ enum Setup {
 
     static func settle(_ model: CredentialSetupModel, until reached: CredentialSetupStage) async {
         for _ in 0..<10_000 where model.stage != reached {
+            await Task.yield()
+        }
+    }
+
+    static func settle(untilTrue reached: @MainActor () -> Bool) async {
+        for _ in 0..<10_000 where !reached() {
+            await Task.yield()
+        }
+    }
+
+    static func settle(_ acquirer: StubAssistedAcquirer, untilAcquisitions count: Int) async {
+        for _ in 0..<10_000 where await acquirer.acquisitions < count {
             await Task.yield()
         }
     }
@@ -222,7 +316,9 @@ enum Setup {
         strings.append(contentsOf: content.steps)
         strings.append(contentsOf: [
             content.cancelTitle, content.replaceTitle, content.removeTitle,
-            content.precondition, content.configuredNotice, content.message?.text
+            content.precondition, content.configuredNotice, content.message?.text,
+            content.assistTitle, content.assistUnavailableReason, content.codeFieldLabel,
+            content.saveDisabledReason, content.costNotice, content.waitingNotice
         ].compactMap { $0 })
         return strings
     }

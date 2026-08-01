@@ -60,8 +60,16 @@ struct LogAbsenceGuardTests {
         "SubscriptionToken.swift",
         "KeychainCredentialStore.swift",
         "ResponseClassifier.swift",
-        "QuotaState.swift"
+        "QuotaState.swift",
+        "SetupTokenScanner.swift",
+        "SystemPseudoTerminal.swift",
+        "SetupTokenCredentialAcquirer.swift",
+        "SecretBuffer.swift",
+        "CredentialSetupModel.swift",
+        "CredentialSetupView.swift"
     ]
+
+    private static let toolsTheSecretPathMustNotUse = ["/usr/bin/script", "SuspendingClock", "NSTemporaryDirectory"]
 
     @Test("QB-SEC-001 AC-21 e QB-API-001 AC-26: a varredura alcança as fontes das duas configurações")
     func theSweepReachesTheSourcesOfBothConfigurations() {
@@ -87,6 +95,16 @@ struct LogAbsenceGuardTests {
             let compilesConditionally = try String(contentsOf: source, encoding: .utf8).contains("#if")
 
             #expect(!compilesConditionally, "\(source.lastPathComponent) compila condicionalmente")
+        }
+    }
+
+    @Test("o percurso do segredo não usa gravador de sessão, disco temporário nem relógio que pausa com a máquina")
+    func theSecretPathUsesNeitherFileWritersNorASuspendingClock() throws {
+        for source in Repository.productionSources {
+            let contents = try String(contentsOf: source, encoding: .utf8)
+            let used = Self.toolsTheSecretPathMustNotUse.filter(contents.contains)
+
+            #expect(used.isEmpty, "\(source.lastPathComponent) usa \(used.joined(separator: ", "))")
         }
     }
 
