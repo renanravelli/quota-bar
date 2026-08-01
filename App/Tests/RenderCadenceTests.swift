@@ -187,4 +187,33 @@ struct PanelRenderClockTests {
         #expect(render.instant == hand.now, "o relógio devolveu um instante guardado em vez do corrente")
         #expect(content.situation.contains(AgeDisplay.phrase(for: .seconds(3 * 3_600))))
     }
+
+    @Test("contratos §9.10: o que o temporizador produz é invalidação de quem leu o instante")
+    func markingInvalidatesWhoeverReadTheInstant() {
+        let render = PanelRenderClock(clock: { Restored.readAt })
+        let invalidations = Invalidations()
+
+        withObservationTracking {
+            _ = render.instant
+        } onChange: {
+            invalidations.record()
+        }
+
+        #expect(invalidations.recorded == 0)
+        render.mark()
+        #expect(invalidations.recorded == 1, "marcar o relógio não invalidou quem leu o instante")
+    }
+}
+
+private final class Invalidations: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var recorded: Int {
+        lock.withLock { count }
+    }
+
+    func record() {
+        lock.withLock { count += 1 }
+    }
 }

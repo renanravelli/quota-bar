@@ -190,6 +190,7 @@ final class IndicatorPresenter {
 
     private func schedulePanelCadences() {
         scheduleDeferralThreshold()
+        scheduleAgeThreshold()
 
         guard panelIsObserved else {
             countdown.stop()
@@ -203,21 +204,8 @@ final class IndicatorPresenter {
 
     private func scheduleAgeThreshold() {
         ageWatch?.cancel()
-        ageWatch = nil
-        armedAgeThreshold = nil
-
-        guard panelIsObserved,
-              let threshold = AgeSchedule.nextThreshold(for: state, now: clock())
-        else { return }
-
-        armedAgeThreshold = threshold
-        let delay = threshold.timeIntervalSince(clock())
-
-        ageWatch = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled else { return }
-            self?.ageThresholdReached()
-        }
+        armedAgeThreshold = panelIsObserved ? AgeSchedule.nextThreshold(for: state, now: clock()) : nil
+        ageWatch = watch(until: armedAgeThreshold) { [weak self] in self?.ageThresholdReached() }
     }
 
     private func ageThresholdReached() {
@@ -227,20 +215,19 @@ final class IndicatorPresenter {
 
     private func scheduleDeferralThreshold() {
         deferralWatch?.cancel()
-        deferralWatch = nil
-        armedDeferralThreshold = nil
+        armedDeferralThreshold = panelIsObserved ? DeferralSchedule.nextThreshold(for: state, now: clock()) : nil
+        deferralWatch = watch(until: armedDeferralThreshold) { [weak self] in self?.deferralThresholdReached() }
+    }
 
-        guard panelIsObserved,
-              let threshold = DeferralSchedule.nextThreshold(for: state, now: clock())
-        else { return }
+    private func watch(until threshold: Date?, reached: @escaping @MainActor () -> Void) -> Task<Void, Never>? {
+        guard let threshold else { return nil }
 
-        armedDeferralThreshold = threshold
         let delay = threshold.timeIntervalSince(clock())
 
-        deferralWatch = Task { [weak self] in
+        return Task {
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
-            self?.deferralThresholdReached()
+            reached()
         }
     }
 

@@ -161,7 +161,7 @@ enum PanelContentBuilder {
             fiveHour: row(name: PanelText.fiveHourName, reading: snapshot?.fiveHour, now: now, formatter: formatter),
             sevenDay: row(name: PanelText.sevenDayName, reading: snapshot?.sevenDay, now: now, formatter: formatter),
             selection: selectionLine(for: indicator),
-            situation: situationLine(for: indicator, state: state, now: now, formatter: formatter),
+            situation: situationLine(for: indicator, state: state, now: now),
             cadence: cadence.map(PanelText.cadenceLine),
             cadenceBar: cadenceBar(cadence, readAt: snapshot?.readAt, now: now),
             source: state?.source.map(PanelText.sourceName),
@@ -265,8 +265,7 @@ enum PanelContentBuilder {
     private static func situationLine(
         for indicator: IndicatorState,
         state: QuotaState?,
-        now: Date,
-        formatter: TimeFormatter
+        now: Date
     ) -> String {
         switch indicator {
         case .notConfigured:
