@@ -172,7 +172,7 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
 
     private func wakeReader() {
         let woken: CheckedContinuation<Void, Never>? = lock.withLock {
-            if !isSourceIdle {
+            if !isSourceIdle, isMasterOpen {
                 isSourceIdle = true
                 readSource.suspend()
             }

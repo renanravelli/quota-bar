@@ -151,6 +151,29 @@ struct SystemPseudoTerminalTests {
         #expect(await session.exitStatus() != nil)
     }
 
+    @Test("encerrar sessões cujo filho já terminou, em disputa, não derruba o processo")
+    func closingSessionsWhoseChildAlreadyEndedNeverBringsTheProcessDown() async {
+        let closures = 800
+        let inFlight = 16
+
+        await withTaskGroup(of: Int32?.self) { group in
+            for index in 0..<closures {
+                if index >= inFlight, let status = await group.next() { #expect(status == 0) }
+                group.addTask { await Self.statusOfOneSpawnDrainedAndClosed() }
+            }
+            for await status in group { #expect(status == 0) }
+        }
+    }
+
+    private static func statusOfOneSpawnDrainedAndClosed() async -> Int32? {
+        guard let session = try? SystemPseudoTerminal().spawn(.harness("/usr/bin/true")) else { return nil }
+
+        _ = await session.drain()
+        await session.terminate()
+
+        return await session.exitStatus()
+    }
+
     @Test("o encerramento chega ao filho como sinal, não como fim de fluxo")
     func theTerminationReachesTheChildAsASignal() async throws {
         let session = try SystemPseudoTerminal().spawn(.harness("/bin/cat"))

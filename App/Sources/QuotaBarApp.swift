@@ -30,6 +30,7 @@ struct QuotaBarApp: App {
                     fallbackSystemName: presenter.symbolName
                 )
             }
+            .labelStyle(.titleAndIcon)
             .accessibilityLabel(Text(presenter.accessibilityLabel))
             .task { await presenter.observeStates() }
         }
