@@ -64,12 +64,10 @@ struct QuotaPanelView: View {
 
             HStack(spacing: 8) {
                 if let configureTitle = content.configureCredentialTitle {
-                    Button(configureTitle, action: configureCredential)
-                        .accessibilityLabel(Text(configureTitle))
+                    ActionButton(action: .configureCredential, title: configureTitle, perform: configureCredential)
                 }
-                Button(content.quitTitle, action: quit)
+                ActionButton(action: .quit, title: content.quitTitle, perform: quit)
                     .keyboardShortcut("q")
-                    .accessibilityLabel(Text(content.quitTitle))
             }
         }
         .padding(14)

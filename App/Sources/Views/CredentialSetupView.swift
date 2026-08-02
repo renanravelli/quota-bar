@@ -80,9 +80,10 @@ struct CredentialSetupView: View {
     private var assistance: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let assistTitle = content.assistTitle {
-                Button(assistTitle) { Task { await model.assist() } }
-                    .buttonStyle(.borderedProminent)
-                    .accessibilityLabel(Text(assistTitle))
+                ActionButton(action: .startAssistedSetup, title: assistTitle) {
+                    Task { await model.assist() }
+                }
+                .buttonStyle(.borderedProminent)
             }
 
             if let reason = content.assistUnavailableReason {
@@ -104,8 +105,10 @@ struct CredentialSetupView: View {
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .accessibilityLabel(Text(codeFieldLabel))
-                        Button(CredentialSetupText.send) { sendCode() }
-                            .disabled(authorizationCode.isEmpty)
+                        ActionButton(action: .submitAuthorizationCode, title: CredentialSetupText.send) {
+                            sendCode()
+                        }
+                        .disabled(authorizationCode.isEmpty)
                     }
                 }
             }
@@ -129,8 +132,9 @@ struct CredentialSetupView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color(PanelSurface.card))
-                Button(content.copyCommandTitle) { model.copyCommand() }
-                    .accessibilityLabel(Text(content.copyCommandTitle))
+                ActionButton(action: .copyCommand, title: content.copyCommandTitle) {
+                    model.copyCommand()
+                }
             }
 
             ForEach(content.steps, id: \.self) { step in
@@ -154,18 +158,20 @@ struct CredentialSetupView: View {
     private var actions: some View {
         HStack(spacing: 8) {
             if content.showsField {
-                Button(content.saveTitle) { save() }
+                ActionButton(action: .saveCredential, title: content.saveTitle) { save() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!content.canSave)
             }
             if let cancelTitle = content.cancelTitle {
-                Button(cancelTitle) { model.cancel() }
+                ActionButton(action: .cancelConduction, title: cancelTitle) { model.cancel() }
             }
             if let replaceTitle = content.replaceTitle {
-                Button(replaceTitle) { model.beginReplacement() }
+                ActionButton(action: .replaceCredential, title: replaceTitle) { model.beginReplacement() }
             }
             if let removeTitle = content.removeTitle {
-                Button(removeTitle) { Task { await model.remove() } }
+                ActionButton(action: .removeCredential, title: removeTitle) {
+                    Task { await model.remove() }
+                }
             }
         }
     }
