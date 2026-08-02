@@ -17,6 +17,18 @@ struct ActionConditions: Equatable {
     }
 }
 
+enum ActionAvailability: Equatable {
+    case available
+    case unavailable(reason: String)
+
+    var reason: String? {
+        switch self {
+        case .available: nil
+        case let .unavailable(reason): reason
+        }
+    }
+}
+
 enum ButtonSurface: Equatable {
     case built
     case planned

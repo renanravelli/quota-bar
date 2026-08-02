@@ -318,7 +318,7 @@ enum Setup {
             content.cancelTitle, content.replaceTitle, content.removeTitle,
             content.precondition, content.configuredNotice, content.message?.text,
             content.assistTitle, content.assistUnavailableReason, content.codeFieldLabel,
-            content.saveDisabledReason, content.costNotice, content.waitingNotice
+            content.saveAvailability.reason, content.costNotice, content.waitingNotice
         ].compactMap { $0 })
         return strings
     }

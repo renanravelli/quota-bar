@@ -40,6 +40,9 @@ enum CredentialSetupText {
 
     static let codeFieldLabel = "Se o navegador exibir um código no formato código#estado, cole-o aqui"
 
+    static let submitNeedsCode =
+        "Enviar fica disponível assim que houver um código colado no campo acima."
+
     static let saveBusyWithAssistance =
         "Há uma configuração automática em curso. Cancele-a para salvar um valor colado à mão."
 

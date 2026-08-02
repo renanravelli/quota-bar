@@ -8,6 +8,7 @@ enum ActionButtonMetrics {
 struct ActionButton: View {
     let action: ButtonAction
     let title: String
+    let availability: ActionAvailability
     let perform: () -> Void
 
     var body: some View {
@@ -20,6 +21,7 @@ struct ActionButton: View {
                 )
                 .contentShape(Rectangle())
         }
+        .disabled(availability != .available)
         .accessibilityLabel(Text(title))
         .help(title)
     }

@@ -42,14 +42,22 @@ private enum SymbolAvailability {
     }
 }
 
-private enum AppLayout {
+enum AppLayout {
     static let root = URL(filePath: #filePath)
         .deletingLastPathComponent()
         .deletingLastPathComponent()
         .deletingLastPathComponent()
 
     static var viewSources: [URL] {
-        let directory = root.appending(path: "App").appending(path: "Sources").appending(path: "Views")
+        sources(under: "Views")
+    }
+
+    static var presentationSources: [URL] {
+        sources(under: "Presentation")
+    }
+
+    static func sources(under folder: String) -> [URL] {
+        let directory = root.appending(path: "App").appending(path: "Sources").appending(path: folder)
         let contents = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil)
         return (contents?.compactMap { $0 as? URL } ?? []).filter { $0.pathExtension == "swift" }
     }
@@ -82,11 +90,13 @@ private enum AppLayout {
         var drawn: Set<String> = []
         var searchStart = text.startIndex
 
-        while let range = text.range(of: "ActionButton(action: .", range: searchStart..<text.endIndex) {
-            let rest = text[range.upperBound...]
-            let name = rest.prefix { $0.isLetter || $0.isNumber }
-            if !name.isEmpty { drawn.insert(String(name)) }
-            searchStart = range.upperBound
+        while let call = text.range(of: "ActionButton(", range: searchStart..<text.endIndex) {
+            let arguments = text[call.upperBound...]
+            if let label = arguments.range(of: "action: .") {
+                let name = arguments[label.upperBound...].prefix { $0.isLetter || $0.isNumber }
+                if !name.isEmpty { drawn.insert(String(name)) }
+            }
+            searchStart = call.upperBound
         }
 
         return drawn
@@ -237,6 +247,41 @@ struct ButtonGrammarTests {
             }
             #expect(rendering.name == title)
         }
+    }
+
+    @Test("cada ação carrega exatamente o papel de cor que a spec lhe atribui")
+    func eachActionCarriesExactlyTheRoleTheSpecAssigns() {
+        var checked = 0
+
+        for action in ButtonAction.allCases {
+            let declared = ApprovedButtonTable.roleByAction[action]
+            #expect(declared != nil, "ação sem papel de cor declarado na tabela: \(action)")
+            #expect(action.role == declared, "\(action) não usa o papel de cor que a spec lhe atribui")
+            checked += 1
+        }
+
+        #expect(checked == ApprovedButtonTable.declaredActions, "a varredura não alcançou as ações da tabela")
+    }
+
+    @Test("o papel destrutivo é só de remover a credencial, e o de evidência só da via assistida")
+    func theDestructiveAndTheEmphasisRolesBelongToOneActionEach() {
+        #expect(ButtonAction.allCases.filter { $0.role == .destructive } == [.removeCredential])
+        #expect(ButtonAction.allCases.filter { $0.role == .emphasis } == [.startAssistedSetup])
+        #expect(
+            ButtonAction.allCases.filter { $0.role == .ordinary }.count == ApprovedButtonTable.declaredActions - 2,
+            "sobrou ação sem o papel comum que a spec lhe atribui"
+        )
+    }
+
+    @Test("o papel de cor de uma ação não recebe o estado da superfície em que ela aparece")
+    func theColourRoleTakesNoStateFromTheSurface() throws {
+        let grammar = try #require(
+            AppLayout.presentationSources.first { $0.lastPathComponent == "ButtonGrammar.swift" }
+        )
+        #expect(try AppLayout.text(of: grammar).contains("var role: PictogramRole {"))
+
+        let button = try #require(AppLayout.viewSources.first { $0.lastPathComponent == "ActionButton.swift" })
+        #expect(try AppLayout.text(of: button).contains(".foregroundStyle(Color(action.role.color))"))
     }
 
     @Test("o pictograma se distingue da superfície em que é desenhado")

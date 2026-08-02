@@ -30,11 +30,10 @@ struct CredentialSetupContent: Equatable {
     let configuredNotice: String?
     let message: CredentialSetupMessage?
     let showsField: Bool
-    let canSave: Bool
+    let saveAvailability: ActionAvailability
     let assistTitle: String?
     let assistUnavailableReason: String?
     let codeFieldLabel: String?
-    let saveDisabledReason: String?
     let costNotice: String?
     let waitingNotice: String?
 }
@@ -90,7 +89,6 @@ final class CredentialSetupModel {
         let isConfigured = stage == .configured || stage == .configuredWithReservation
         let isAttempting = stage == .assisting || stage == .verifying
         let showsField = !isConfigured && stage != .verifying
-        let saveIsBlockedBecause = saveBlockingReason()
 
         return CredentialSetupContent(
             stage: stage,
@@ -108,14 +106,17 @@ final class CredentialSetupModel {
             configuredNotice: isConfigured ? CredentialSetupText.configuredNotice : nil,
             message: message,
             showsField: showsField,
-            canSave: showsField && saveIsBlockedBecause == nil,
+            saveAvailability: saveAvailability(),
             assistTitle: discovery.allowsProbe && !isAttempting ? CredentialSetupText.assist : nil,
             assistUnavailableReason: discovery.allowsProbe ? nil : CredentialSetupText.assistNeedsClaudeCode,
             codeFieldLabel: stage == .assisting ? CredentialSetupText.codeFieldLabel : nil,
-            saveDisabledReason: showsField ? saveIsBlockedBecause : nil,
             costNotice: showsField || isAttempting ? CredentialSetupText.cost : nil,
             waitingNotice: waiting.map(CredentialSetupText.waiting(at:))
         )
+    }
+
+    func submitAvailability(codeTyped: Bool) -> ActionAvailability {
+        codeTyped ? .available : .unavailable(reason: CredentialSetupText.submitNeedsCode)
     }
 
     func refresh() async {
@@ -297,10 +298,10 @@ final class CredentialSetupModel {
         return hasStoredCredential ? .configured : .empty
     }
 
-    private func saveBlockingReason() -> String? {
-        if !discovery.allowsProbe { return CredentialSetupText.saveNeedsClaudeCode }
-        if stage == .assisting { return CredentialSetupText.saveBusyWithAssistance }
-        return nil
+    private func saveAvailability() -> ActionAvailability {
+        if !discovery.allowsProbe { return .unavailable(reason: CredentialSetupText.saveNeedsClaudeCode) }
+        if stage == .assisting { return .unavailable(reason: CredentialSetupText.saveBusyWithAssistance) }
+        return .available
     }
 
     private static func hasShapeOfAuthorizationCode(_ pasted: String) -> Bool {

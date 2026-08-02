@@ -64,9 +64,14 @@ struct QuotaPanelView: View {
 
             HStack(spacing: 8) {
                 if let configureTitle = content.configureCredentialTitle {
-                    ActionButton(action: .configureCredential, title: configureTitle, perform: configureCredential)
+                    ActionButton(
+                        action: .configureCredential,
+                        title: configureTitle,
+                        availability: .available,
+                        perform: configureCredential
+                    )
                 }
-                ActionButton(action: .quit, title: content.quitTitle, perform: quit)
+                ActionButton(action: .quit, title: content.quitTitle, availability: .available, perform: quit)
                     .keyboardShortcut("q")
             }
         }

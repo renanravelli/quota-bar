@@ -42,7 +42,7 @@ struct CredentialSetupView: View {
             if content.showsField {
                 instructions
                 credentialField
-                if let reason = content.saveDisabledReason {
+                if let reason = content.saveAvailability.reason {
                     bodyText(reason).foregroundStyle(secondaryStyle)
                 }
             }
@@ -96,7 +96,7 @@ struct CredentialSetupView: View {
     private var assistance: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let assistTitle = content.assistTitle {
-                ActionButton(action: .startAssistedSetup, title: assistTitle) {
+                ActionButton(action: .startAssistedSetup, title: assistTitle, availability: .available) {
                     Task { await model.assist() }
                 }
                 .buttonStyle(.borderedProminent)
@@ -112,22 +112,34 @@ struct CredentialSetupView: View {
             }
 
             if let codeFieldLabel = content.codeFieldLabel {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(codeFieldLabel)
-                        .font(.footnote)
-                        .foregroundStyle(secondaryStyle)
-                    HStack(spacing: 8) {
-                        TextField(codeFieldLabel, text: $authorizationCode)
-                            .textFieldStyle(.roundedBorder)
-                            .labelsHidden()
-                            .accessibilityLabel(Text(codeFieldLabel))
-                            .focused($focusedField, equals: .authorizationCode)
-                        ActionButton(action: .submitAuthorizationCode, title: CredentialSetupText.send) {
-                            sendCode()
-                        }
-                        .disabled(authorizationCode.isEmpty)
-                    }
+                codeEntry(labelled: codeFieldLabel)
+            }
+        }
+    }
+
+    private func codeEntry(labelled label: String) -> some View {
+        let submit = model.submitAvailability(codeTyped: !authorizationCode.isEmpty)
+
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.footnote)
+                .foregroundStyle(secondaryStyle)
+            HStack(spacing: 8) {
+                TextField(label, text: $authorizationCode)
+                    .textFieldStyle(.roundedBorder)
+                    .labelsHidden()
+                    .accessibilityLabel(Text(label))
+                    .focused($focusedField, equals: .authorizationCode)
+                ActionButton(
+                    action: .submitAuthorizationCode,
+                    title: CredentialSetupText.send,
+                    availability: submit
+                ) {
+                    sendCode()
                 }
+            }
+            if let reason = submit.reason {
+                bodyText(reason).foregroundStyle(secondaryStyle)
             }
         }
     }
@@ -149,7 +161,7 @@ struct CredentialSetupView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color(PanelSurface.card))
-                ActionButton(action: .copyCommand, title: content.copyCommandTitle) {
+                ActionButton(action: .copyCommand, title: content.copyCommandTitle, availability: .available) {
                     model.copyCommand()
                 }
             }
@@ -176,18 +188,27 @@ struct CredentialSetupView: View {
     private var actions: some View {
         HStack(spacing: 8) {
             if content.showsField {
-                ActionButton(action: .saveCredential, title: content.saveTitle) { save() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!content.canSave)
+                ActionButton(
+                    action: .saveCredential,
+                    title: content.saveTitle,
+                    availability: content.saveAvailability
+                ) {
+                    save()
+                }
+                .keyboardShortcut(.defaultAction)
             }
             if let cancelTitle = content.cancelTitle {
-                ActionButton(action: .cancelConduction, title: cancelTitle) { model.cancel() }
+                ActionButton(action: .cancelConduction, title: cancelTitle, availability: .available) {
+                    model.cancel()
+                }
             }
             if let replaceTitle = content.replaceTitle {
-                ActionButton(action: .replaceCredential, title: replaceTitle) { model.beginReplacement() }
+                ActionButton(action: .replaceCredential, title: replaceTitle, availability: .available) {
+                    model.beginReplacement()
+                }
             }
             if let removeTitle = content.removeTitle {
-                ActionButton(action: .removeCredential, title: removeTitle) {
+                ActionButton(action: .removeCredential, title: removeTitle, availability: .available) {
                     Task { await model.remove() }
                 }
             }

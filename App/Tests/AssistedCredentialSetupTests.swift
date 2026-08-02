@@ -17,9 +17,9 @@ struct AssistedCredentialSetupTests {
         #expect(content.assistTitle != nil)
         #expect(content.assistUnavailableReason == nil)
         #expect(content.showsField)
-        #expect(content.canSave)
+        #expect(content.saveAvailability == .available)
         #expect(content.command == "claude setup-token")
-        #expect(content.saveDisabledReason == nil)
+        #expect(content.saveAvailability.reason == nil)
     }
 
     @Test("a ação assistida aparece sem rótulo de experimento e sem preferência que a habilite")
@@ -164,8 +164,8 @@ struct AssistedCredentialSetupTests {
         #expect(content.showsField)
         #expect(content.command == "claude setup-token")
         #expect(!content.saveTitle.isEmpty)
-        #expect(!content.canSave)
-        #expect(content.saveDisabledReason != nil)
+        #expect(content.saveAvailability != .available)
+        #expect(content.saveAvailability.reason != nil)
         #expect(content.codeFieldLabel != nil)
 
         await acquirer.release()
@@ -259,7 +259,7 @@ struct AssistedCredentialSetupTests {
 
             #expect(model.stage == .empty, "\(cause) não devolveu a superfície ao estado anterior")
             #expect(model.content.showsField, "\(cause) escondeu o campo da via manual")
-            #expect(model.content.canSave, "\(cause) deixou salvar indisponível")
+            #expect(model.content.saveAvailability == .available, "\(cause) deixou salvar indisponível")
             #expect(model.content.command == "claude setup-token")
             #expect(model.content.assistTitle != nil, "\(cause) removeu a chance de tentar de novo")
             #expect(await store.storeCount == 0)
@@ -430,8 +430,8 @@ struct AssistedCredentialSetupTests {
         #expect(content.assistTitle == nil)
         #expect(content.assistUnavailableReason?.contains("Claude Code") == true)
         #expect(content.showsField)
-        #expect(!content.canSave)
-        #expect(content.saveDisabledReason != nil)
+        #expect(content.saveAvailability != .available)
+        #expect(content.saveAvailability.reason != nil)
         #expect(content.precondition?.contains("Instale o Claude Code") == true)
     }
 

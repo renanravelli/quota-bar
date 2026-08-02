@@ -51,7 +51,7 @@ struct CredentialSetupCompositionTests {
         )
 
         await model.refresh()
-        #expect(model.content.canSave)
+        #expect(model.content.saveAvailability == .available)
 
         await model.save(credentialCanary)
 
@@ -86,7 +86,7 @@ struct CredentialSetupCompositionTests {
         await model.save(credentialCanary)
 
         #expect(model.stage == .blockedByPrecondition)
-        #expect(!model.content.canSave)
+        #expect(model.content.saveAvailability != .available)
         #expect(transport.sent.isEmpty)
         #expect(await store.storeCount == 0)
     }

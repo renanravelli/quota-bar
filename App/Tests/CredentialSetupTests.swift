@@ -41,8 +41,8 @@ struct CredentialSetupTests {
         #expect(content.stage == .blockedByPrecondition)
         #expect(content.precondition != nil)
         #expect(content.precondition?.contains("Claude Code") == true)
-        #expect(!content.canSave)
-        #expect(content.saveDisabledReason != nil)
+        #expect(content.saveAvailability != .available)
+        #expect(content.saveAvailability.reason != nil)
     }
 
     @Test("instalar o Claude Code libera a superfície sem reiniciar o aplicativo")
@@ -58,12 +58,12 @@ struct CredentialSetupTests {
         )
 
         await model.refresh()
-        #expect(!model.content.canSave)
+        #expect(model.content.saveAvailability != .available)
 
         await discovery.set(Setup.installed)
         await model.refresh()
 
-        #expect(model.content.canSave)
+        #expect(model.content.saveAvailability == .available)
         #expect(model.content.precondition == nil)
     }
 
