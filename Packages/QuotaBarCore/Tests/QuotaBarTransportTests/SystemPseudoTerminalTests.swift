@@ -174,6 +174,32 @@ struct SystemPseudoTerminalTests {
         return await session.exitStatus()
     }
 
+    @Test("o que o filho imprime antes de terminar chega inteiro, mesmo com sessões em disputa")
+    func whatTheChildPrintsBeforeEndingArrivesWholeEvenUnderContention() async throws {
+        let sessions = 6_400
+        let inFlight = 32
+        var silent = 0
+
+        try await withThrowingTaskGroup(of: Bool.self) { group in
+            for index in 0..<sessions {
+                if index >= inFlight, try await group.next() == false { silent += 1 }
+                group.addTask { try await Self.oneSessionSawWhatTheChildPrinted() }
+            }
+            for try await heard in group where !heard { silent += 1 }
+        }
+
+        #expect(silent == 0, "\(silent) de \(sessions) sessões perderam a saída do filho")
+    }
+
+    private static func oneSessionSawWhatTheChildPrinted() async throws -> Bool {
+        let session = try SystemPseudoTerminal().spawn(.harness("/bin/echo", ["ok"]))
+
+        let heard = await session.drain()
+        await session.terminate()
+
+        return heard.contains("ok")
+    }
+
     @Test("o encerramento chega ao filho como sinal, não como fim de fluxo")
     func theTerminationReachesTheChildAsASignal() async throws {
         let session = try SystemPseudoTerminal().spawn(.harness("/bin/cat"))

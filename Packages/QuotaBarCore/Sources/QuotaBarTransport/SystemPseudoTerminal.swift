@@ -7,6 +7,7 @@ final class ProcessExitGate: @unchecked Sendable {
     private let timers = DispatchQueue(label: "com.renanravelli.QuotaBar.processexit")
     private var recorded: Int32?
     private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var observers: [@Sendable () -> Void] = []
 
     var status: Int32? {
         lock.withLock { recorded }
@@ -14,9 +15,23 @@ final class ProcessExitGate: @unchecked Sendable {
 
     func attach(to process: Process) {
         process.terminationHandler = { [self] finished in
-            lock.withLock { recorded = finished.terminationStatus }
+            let notify: [@Sendable () -> Void] = lock.withLock {
+                recorded = finished.terminationStatus
+                defer { observers.removeAll() }
+                return observers
+            }
             release()
+            notify.forEach { $0() }
         }
+    }
+
+    func observeExit(_ notify: @escaping @Sendable () -> Void) {
+        let alreadyExited: Bool = lock.withLock {
+            guard recorded == nil else { return true }
+            observers.append(notify)
+            return false
+        }
+        if alreadyExited { notify() }
     }
 
     func wait(within grace: Duration) async {
@@ -62,11 +77,12 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
     private let incoming: UnsafeMutableRawBufferPointer
     private let lock = NSLock()
 
-    private var isMasterOpen = true
+    private var isOpen = true
     private var isSourceIdle = true
+    private var hasChildExited = false
     private var reader: CheckedContinuation<Void, Never>?
 
-    init(master: Int32, process: Process, exit: ProcessExitGate, terminationGrace: Duration) {
+    init(master: Int32, slave: Int32, process: Process, exit: ProcessExitGate, terminationGrace: Duration) {
         self.master = master
         self.process = process
         self.exit = exit
@@ -76,11 +92,12 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
         readSource = DispatchSource.makeReadSource(fileDescriptor: master, queue: events)
 
         readSource.setEventHandler { [weak self] in self?.wakeReader() }
-        readSource.setCancelHandler { close(master) }
+        readSource.setCancelHandler { close(master); close(slave) }
+        exit.observeExit { [weak self] in self?.noteChildExit() }
     }
 
     deinit {
-        closeMaster()
+        closeTerminal()
         SecretBuffer.zero(incoming)
         incoming.deallocate()
     }
@@ -88,9 +105,10 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
     var processIdentifier: Int32 { process.processIdentifier }
 
     func readChunk(_ consume: (UnsafeRawBufferPointer) -> Void) async throws -> Bool {
-        while lock.withLock({ isMasterOpen }) {
+        while lock.withLock({ isOpen }) {
             if Task.isCancelled { return false }
 
+            let nothingMoreCanArrive = lock.withLock { hasChildExited }
             let received = read(master, incoming.baseAddress, incoming.count)
 
             if received > 0 {
@@ -104,6 +122,7 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
             case EINTR:
                 continue
             case EAGAIN, EWOULDBLOCK:
+                if nothingMoreCanArrive { return false }
                 await waitUntilReadable()
             default:
                 return false
@@ -144,7 +163,7 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
             await exit.wait(within: terminationGrace)
         }
 
-        closeMaster()
+        closeTerminal()
     }
 
     func exitStatus() async -> Int32? {
@@ -155,7 +174,7 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
         await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 let settled: Bool = lock.withLock {
-                    guard isMasterOpen, !Task.isCancelled else { return true }
+                    guard isOpen, !hasChildExited, !Task.isCancelled else { return true }
                     reader = continuation
                     if isSourceIdle {
                         isSourceIdle = false
@@ -172,7 +191,7 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
 
     private func wakeReader() {
         let woken: CheckedContinuation<Void, Never>? = lock.withLock {
-            if !isSourceIdle, isMasterOpen {
+            if !isSourceIdle, isOpen {
                 isSourceIdle = true
                 readSource.suspend()
             }
@@ -182,11 +201,16 @@ final class SystemPseudoTerminalSession: PseudoTerminalSession, @unchecked Senda
         woken?.resume()
     }
 
-    private func closeMaster() {
+    private func noteChildExit() {
+        lock.withLock { hasChildExited = true }
+        wakeReader()
+    }
+
+    private func closeTerminal() {
         var wasOpen = false
         let woken: CheckedContinuation<Void, Never>? = lock.withLock {
-            guard isMasterOpen else { return nil }
-            isMasterOpen = false
+            guard isOpen else { return nil }
+            isOpen = false
             wasOpen = true
             if isSourceIdle {
                 isSourceIdle = false
@@ -245,10 +269,10 @@ public struct SystemPseudoTerminal: PseudoTerminalSpawning {
             close(slave)
             throw PseudoTerminalFailure.cannotLaunch
         }
-        close(slave)
 
         return SystemPseudoTerminalSession(
             master: master,
+            slave: slave,
             process: process,
             exit: exit,
             terminationGrace: terminationGrace
