@@ -7,6 +7,7 @@ struct QuotaBarApp: App {
     @State private var render: PanelRenderClock
     @State private var preferences = AccessibilityPreferences()
     @State private var setup: CredentialSetupModel
+    @State private var keyboard = KeyboardReach()
 
     init() {
         let provider = ProviderFactory.make()
@@ -20,7 +21,7 @@ struct QuotaBarApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            PanelHost(presenter: presenter, render: render, preferences: preferences)
+            PanelHost(presenter: presenter, render: render, preferences: preferences, keyboard: keyboard)
         } label: {
             Label {
                 Text(presenter.indicatorText)
@@ -39,6 +40,7 @@ struct QuotaBarApp: App {
         Window(CredentialSetupText.title, id: CredentialSetupWindow.id) {
             CredentialSetupView(
                 model: setup,
+                keyboard: keyboard,
                 shouldAnimateEntry: AnimationPolicy.shouldAnimate(preferences.reduceMotion)
             )
         }
@@ -50,6 +52,7 @@ private struct PanelHost: View {
     let presenter: IndicatorPresenter
     let render: PanelRenderClock
     let preferences: AccessibilityPreferences
+    let keyboard: KeyboardReach
 
     @Environment(\.openWindow) private var openWindow
 
@@ -58,7 +61,7 @@ private struct PanelHost: View {
             content: presenter.panelContent(at: render.instant),
             shouldAnimateEntry: AnimationPolicy.shouldAnimate(preferences.reduceMotion),
             configureCredential: {
-                NSApp.activate()
+                keyboard.requestForeground()
                 openWindow(id: CredentialSetupWindow.id)
             },
             quit: {

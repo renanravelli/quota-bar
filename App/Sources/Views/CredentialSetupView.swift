@@ -3,9 +3,12 @@ import SwiftUI
 
 struct CredentialSetupView: View {
     let model: CredentialSetupModel
+    let keyboard: KeyboardReach
     let shouldAnimateEntry: Bool
 
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.controlActiveState) private var activeState
+    @FocusState private var focusedField: CredentialField?
     @State private var pasted = ""
     @State private var authorizationCode = ""
     @State private var hasEntered = false
@@ -60,6 +63,18 @@ struct CredentialSetupView: View {
         .fixedSize(horizontal: false, vertical: true)
         .background(Color(PanelSurface.background))
         .opacity(hasEntered ? 1 : 0)
+        .onChange(of: activeState, initial: true) { _, state in
+            keyboard.observed(keyWindow: state == .key)
+        }
+        .onChange(of: content.focusableFields, initial: true) { _, fields in
+            keyboard.offers(fields)
+        }
+        .onChange(of: keyboard.focusedField, initial: true) { _, field in
+            focusedField = field
+        }
+        .onChange(of: focusedField) { _, field in
+            keyboard.personFocused(field)
+        }
         .task {
             await model.refresh()
             guard shouldAnimateEntry else {
@@ -72,6 +87,7 @@ struct CredentialSetupView: View {
         }
         .onDisappear {
             model.cancel()
+            keyboard.surfaceClosed()
             pasted = ""
             authorizationCode = ""
         }
@@ -105,6 +121,7 @@ struct CredentialSetupView: View {
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .accessibilityLabel(Text(codeFieldLabel))
+                            .focused($focusedField, equals: .authorizationCode)
                         ActionButton(action: .submitAuthorizationCode, title: CredentialSetupText.send) {
                             sendCode()
                         }
@@ -152,6 +169,7 @@ struct CredentialSetupView: View {
                 .textFieldStyle(.roundedBorder)
                 .labelsHidden()
                 .accessibilityLabel(Text(content.fieldLabel))
+                .focused($focusedField, equals: .credential)
         }
     }
 
