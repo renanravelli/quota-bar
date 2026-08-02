@@ -136,6 +136,120 @@ if [ -n "$brand_named_art" ]; then
   exit 1
 fi
 
+SYMBOL_AVAILABILITY_DATABASE='/System/Library/CoreServices/CoreGlyphs.bundle/Contents/Resources/name_availability.plist'
+MINIMUM_MACOS='14.0'
+
+symbol_sources="$(find "${SRCROOT:-.}"/App/Sources "${SRCROOT:-.}"/Packages/*/Sources \
+  -type f -name '*.swift' 2>/dev/null || true)"
+
+if [ -z "$symbol_sources" ]; then
+  echo "error: nenhuma fonte Swift de produto encontrada a partir de '${SRCROOT:-.}'"
+  echo "error: varredura sem nada para varrer não prova nada, e passar assim seria reprovar em silêncio"
+  exit 1
+fi
+
+if [ ! -f "$SYMBOL_AVAILABILITY_DATABASE" ]; then
+  echo "error: a base de disponibilidade de símbolos não está em '$SYMBOL_AVAILABILITY_DATABASE'"
+  echo "error: sem ela não há como afirmar que um nome existe em macOS $MINIMUM_MACOS, e o portão reprova em vez de deixar passar"
+  echo "error: se a base mudou de lugar ou de formato, conserte esta verificação ou fixe aqui os trens aceitos"
+  exit 1
+fi
+
+train_releases="$(/usr/libexec/PlistBuddy -c 'Print :year_to_release' "$SYMBOL_AVAILABILITY_DATABASE" 2>/dev/null \
+  | awk '/^ +[^ ]+ = Dict \{$/ { train = $1; next } /^ +macOS = / { print "train", train, $3 }' || true)"
+symbol_trains="$(/usr/libexec/PlistBuddy -c 'Print :symbols' "$SYMBOL_AVAILABILITY_DATABASE" 2>/dev/null \
+  | awk 'NF == 3 && $2 == "=" { print "symbol", $1, $3 }' || true)"
+
+if [ -z "$train_releases" ] || [ -z "$symbol_trains" ]; then
+  echo "error: a base em '$SYMBOL_AVAILABILITY_DATABASE' não tem o formato que esta verificação sabe ler"
+  echo "error: o portão reprova em vez de deixar passar: verificação que se apaga sozinha devolve o defeito que ela existe para pegar"
+  exit 1
+fi
+
+NON_SYMBOL_LITERALS=''
+
+swift_literals() {
+  printf '%s\n' "$symbol_sources" | tr '\n' '\0' | xargs -0 grep -hoE "$1" 2>/dev/null || true
+}
+
+locate_literal() {
+  printf '%s\n' "$symbol_sources" | tr '\n' '\0' \
+    | xargs -0 grep -nF "\"$1\"" 2>/dev/null | cut -d: -f1,2 | sed "s|^${SRCROOT:-.}/||" || true
+}
+
+used_names="$(swift_literals '"[^"]*"' | tr -d '"' | sort -u | awk 'NF == 1 { print "used", $1 }' || true)"
+requested_names="$(swift_literals '(systemName|systemSymbolName|systemImage): *"[^"]+"' \
+  | grep -oE '"[^"]+"' | tr -d '"' | sort -u | awk 'NF == 1 { print "requested", $1 }' || true)"
+
+exempt_names="$(printf '%s\n' "$NON_SYMBOL_LITERALS" | awk 'NF == 1 { print "exempt", $1 }')"
+
+symbol_verdict="$(printf '%s\n%s\n%s\n%s\n%s\n' \
+  "$train_releases" "$symbol_trains" "$used_names" "$requested_names" "$exempt_names" \
+  | awk -v minimum="$MINIMUM_MACOS" '
+      function exceeds_minimum(version,   have, want, i) {
+        split(version, have, "."); split(minimum, want, ".")
+        for (i = 1; i <= 3; i++) {
+          if ((have[i] + 0) > (want[i] + 0)) return 1
+          if ((have[i] + 0) < (want[i] + 0)) return 0
+        }
+        return 0
+      }
+      $1 == "train" { release[$2] = $3; next }
+      $1 == "symbol" { train[$2] = $3; next }
+      $1 == "requested" { requested[$2] = 1; used[$2] = 1; next }
+      $1 == "used" { used[$2] = 1; next }
+      $1 == "exempt" { exempt[$2] = 1; next }
+      END {
+        for (name in used) {
+          if (!(name in train)) continue
+          if ((name in exempt) && !(name in requested)) continue
+          checked++
+          if (!(train[name] in release)) {
+            print "untrained " name " — trem " train[name]
+          } else if (exceeds_minimum(release[train[name]])) {
+            print "too-new " name " — trem " train[name] ", exige macOS " release[train[name]]
+          }
+        }
+        for (name in requested) if (!(name in train)) print "unknown " name
+        print "checked " checked + 0
+      }
+    ')"
+
+offenders_of_kind() {
+  printf '%s\n' "$symbol_verdict" | awk -v kind="$1" '$1 == kind { $1 = ""; sub(/^ /, ""); print }'
+}
+
+too_new="$(offenders_of_kind too-new)"
+if [ -n "$too_new" ]; then
+  echo "error: nome de símbolo do sistema indisponível no alvo mínimo macOS $MINIMUM_MACOS:"
+  printf '%s\n' "$too_new" | while IFS= read -r offender; do
+    echo "error:   $offender"
+    locate_literal "${offender%% *}" | sed 's/^/error:     /'
+  done
+  echo "error: o nome compila sem aviso e desenha o vazio no alvo mínimo"
+  echo "error: a máquina que o introduz roda sistema mais novo, onde ele existe — o defeito não aparece para quem o criou"
+  echo "error: se o literal apontado não é nome de símbolo, declare-o em NON_SYMBOL_LITERALS neste portão"
+  exit 1
+fi
+
+untrained="$(offenders_of_kind untrained)"
+if [ -n "$untrained" ]; then
+  echo "error: símbolo cujo trem de lançamento não está mapeado para versão de macOS:"
+  printf '%s\n' "$untrained" | sed 's/^/error:   /'
+  echo "error: sem o mapeamento não se afirma disponibilidade, e o portão reprova em vez de supor"
+  exit 1
+fi
+
+unknown="$(offenders_of_kind unknown)"
+if [ -n "$unknown" ]; then
+  echo "error: nome pedido ao sistema que a base de símbolos não conhece:"
+  printf '%s\n' "$unknown" | sed 's/^/error:   /'
+  echo "error: nome que o sistema não reconhece não desenha em versão nenhuma"
+  exit 1
+fi
+
+echo "Portão: $(offenders_of_kind checked) nome(s) de símbolo do sistema conferidos contra macOS $MINIMUM_MACOS."
+
 if [ "$MODE" = "release" ]; then
   bundled_art="$(find "$APP_PATH" -type f 2>/dev/null | grep -iE "\.($art_extensions)$" || true)"
   if [ -n "$bundled_art" ]; then
